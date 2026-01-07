@@ -106,7 +106,7 @@ BCRYPT_ROUNDS=10
 psql -U postgres
 
 # Create database
-CREATE DATABASE akuntansi_dev;
+CREATE DATABASE akun_tansi;
 
 # Exit
 \q
