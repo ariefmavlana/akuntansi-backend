@@ -1,0 +1,34 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "CommonJS",
+        "lib": [
+            "ES2022"
+        ],
+        "outDir": "./dist",
+        "rootDir": "./",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "moduleResolution": "node",
+        "baseUrl": "./",
+        "resolveJsonModule": true,
+        "paths": {
+            "@/*": [
+                "src/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts",
+        "prisma/**/*.ts",
+        "tests/**/*.ts",
+        ".eslintrc.js",
+        "jest.config.js"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}
