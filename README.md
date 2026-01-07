@@ -73,7 +73,7 @@ PORT=5000
 API_VERSION=v1
 
 # Database
-DATABASE_URL="postgresql://username:password@localhost:5432/akuntansi_dev?schema=public"
+DATABASE_URL="postgresql://username:password@localhost:5432/akun_tansi?schema=public"
 
 # JWT (CHANGE THESE IN PRODUCTION!)
 JWT_SECRET=your-super-secret-jwt-key-at-least-32-characters-long

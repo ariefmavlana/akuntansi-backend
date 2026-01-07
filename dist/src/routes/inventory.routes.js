@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const inventory_controller_1 = require("../controllers/inventory.controller");
+const validation_middleware_1 = require("../middleware/validation.middleware");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+const inventory_validator_1 = require("../validators/inventory.validator");
+const client_1 = require("@prisma/client");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.authenticate);
+router.post('/', (0, auth_middleware_1.authorize)(client_1.Role.SUPERADMIN, client_1.Role.ADMIN, client_1.Role.WAREHOUSE_MANAGER, client_1.Role.PURCHASING), (0, validation_middleware_1.validate)(inventory_validator_1.createInventorySchema), inventory_controller_1.inventoryController.createInventory.bind(inventory_controller_1.inventoryController));
+router.post('/movement', (0, auth_middleware_1.authorize)(client_1.Role.SUPERADMIN, client_1.Role.ADMIN, client_1.Role.WAREHOUSE_MANAGER), (0, validation_middleware_1.validate)(inventory_validator_1.stockMovementSchema), inventory_controller_1.inventoryController.recordStockMovement.bind(inventory_controller_1.inventoryController));
+router.get('/', (0, validation_middleware_1.validate)(inventory_validator_1.listInventorySchema), inventory_controller_1.inventoryController.listInventory.bind(inventory_controller_1.inventoryController));
+router.get('/:id', inventory_controller_1.inventoryController.getInventoryById.bind(inventory_controller_1.inventoryController));
+exports.default = router;

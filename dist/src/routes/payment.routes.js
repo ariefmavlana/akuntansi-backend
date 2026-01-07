@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const payment_controller_1 = require("../controllers/payment.controller");
+const validation_middleware_1 = require("../middleware/validation.middleware");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+const payment_validator_1 = require("../validators/payment.validator");
+const client_1 = require("@prisma/client");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.authenticate);
+router.post('/', (0, auth_middleware_1.authorize)(client_1.Role.SUPERADMIN, client_1.Role.ADMIN, client_1.Role.CASHIER, client_1.Role.ACCOUNTANT, client_1.Role.SENIOR_ACCOUNTANT), (0, validation_middleware_1.validate)(payment_validator_1.createPaymentSchema), payment_controller_1.paymentController.createPayment.bind(payment_controller_1.paymentController));
+router.get('/summary', (0, validation_middleware_1.validate)(payment_validator_1.getPaymentSummarySchema), payment_controller_1.paymentController.getPaymentSummary.bind(payment_controller_1.paymentController));
+router.get('/', (0, validation_middleware_1.validate)(payment_validator_1.listPaymentsSchema), payment_controller_1.paymentController.listPayments.bind(payment_controller_1.paymentController));
+router.get('/:id', (0, validation_middleware_1.validate)(payment_validator_1.getPaymentByIdSchema), payment_controller_1.paymentController.getPaymentById.bind(payment_controller_1.paymentController));
+router.delete('/:id', (0, auth_middleware_1.authorize)(client_1.Role.SUPERADMIN, client_1.Role.ADMIN, client_1.Role.SENIOR_ACCOUNTANT), (0, validation_middleware_1.validate)(payment_validator_1.deletePaymentSchema), payment_controller_1.paymentController.deletePayment.bind(payment_controller_1.paymentController));
+exports.default = router;

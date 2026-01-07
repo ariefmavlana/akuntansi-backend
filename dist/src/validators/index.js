@@ -21,4 +21,12 @@ __exportStar(require("./user.validator"), exports);
 __exportStar(require("./company.validator"), exports);
 __exportStar(require("./coa.validator"), exports);
 __exportStar(require("./transaction.validator"), exports);
+__exportStar(require("./voucher.validator"), exports);
+__exportStar(require("./journal.validator"), exports);
+__exportStar(require("./customer.validator"), exports);
+__exportStar(require("./supplier.validator"), exports);
+__exportStar(require("./payment.validator"), exports);
+__exportStar(require("./tax.validator"), exports);
+__exportStar(require("./inventory.validator"), exports);
+__exportStar(require("./fixedAsset.validator"), exports);
 // ... more validators will be added
