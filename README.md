@@ -1,6 +1,10 @@
 # 🚀 Akuntansi Indonesia - Backend API
 
+**Status:** ✅ Phase 1-5 Complete | 🟢 40 API Endpoints Ready | 🚀 Production-Ready Infrastructure
+
 Backend API untuk Sistem Akuntansi Indonesia yang compliant dengan PSAK.
+
+> **📊 Current Progress:** 5 modules complete with 40 endpoints. See [PROGRESS.md](PROGRESS.md) for details.
 
 ## 📋 Table of Contents
 
@@ -10,6 +14,7 @@ Backend API untuk Sistem Akuntansi Indonesia yang compliant dengan PSAK.
 - [Configuration](#configuration)
 - [Database Setup](#database-setup)
 - [Running the Application](#running-the-application)
+- [Documentation](#documentation)
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentation)
 - [Testing](#testing)
