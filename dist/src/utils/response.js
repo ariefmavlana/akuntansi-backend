@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ResponseUtil = void 0;
+exports.createdResponse = exports.errorResponse = exports.successResponse = exports.ResponseUtil = void 0;
 class ResponseUtil {
     static success(res, data, message = 'Success', statusCode = 200, meta) {
         const response = {
@@ -20,7 +20,7 @@ class ResponseUtil {
             error: {
                 code,
                 message,
-                ...(details && { details }),
+                ...(details !== undefined && { details }),
             },
         };
         return res.status(statusCode).json(response);
@@ -45,3 +45,10 @@ class ResponseUtil {
     }
 }
 exports.ResponseUtil = ResponseUtil;
+// Convenience exports
+const successResponse = (res, data, message, statusCode, meta) => ResponseUtil.success(res, data, message, statusCode, meta);
+exports.successResponse = successResponse;
+const errorResponse = (res, code, message, statusCode, details) => ResponseUtil.error(res, code, message, statusCode, details);
+exports.errorResponse = errorResponse;
+const createdResponse = (res, data, message) => ResponseUtil.created(res, data, message);
+exports.createdResponse = createdResponse;

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validate = void 0;
 const zod_1 = require("zod");
-const response_1 = require("@/utils/response");
+const response_1 = require("../utils/response");
 const validate = (schema) => {
     return async (req, res, next) => {
         try {

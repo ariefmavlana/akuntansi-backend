@@ -7,9 +7,7 @@ import { env } from '@/config/env';
 import { errorHandler, notFoundHandler } from '@/middleware/error.middleware';
 import { generalRateLimiter } from '@/middleware/rate-limit.middleware';
 import logger from '@/utils/logger';
-
-// TODO: Import routes when created
-// import routes from '@/routes';
+import routes from '@/routes';
 
 const app: Application = express();
 
@@ -56,11 +54,11 @@ app.get('/health', (req, res) => {
 });
 
 // API routes
-// TODO: Uncomment when routes are created
-// app.use(`/api/${env.API_VERSION}`, routes);
+app.use(`/api/${env.API_VERSION}`, routes);
 
 // Error handling
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 export default app;
+

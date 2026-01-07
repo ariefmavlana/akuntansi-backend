@@ -3,9 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PasswordUtil = void 0;
+exports.validatePasswordStrength = exports.comparePassword = exports.hashPassword = exports.PasswordUtil = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const env_1 = require("@/config/env");
+const env_1 = require("../config/env");
 class PasswordUtil {
     static async hash(password) {
         return bcryptjs_1.default.hash(password, env_1.env.BCRYPT_ROUNDS);
@@ -34,3 +34,10 @@ class PasswordUtil {
     }
 }
 exports.PasswordUtil = PasswordUtil;
+// Convenience exports
+const hashPassword = (password) => PasswordUtil.hash(password);
+exports.hashPassword = hashPassword;
+const comparePassword = (password, hashedPassword) => PasswordUtil.compare(password, hashedPassword);
+exports.comparePassword = comparePassword;
+const validatePasswordStrength = (password) => PasswordUtil.validateStrength(password);
+exports.validatePasswordStrength = validatePasswordStrength;

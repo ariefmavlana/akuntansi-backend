@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.apiRateLimiter = exports.authRateLimiter = exports.generalRateLimiter = void 0;
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
-const env_1 = require("@/config/env");
-const response_1 = require("@/utils/response");
+const env_1 = require("../config/env");
+const response_1 = require("../utils/response");
 exports.generalRateLimiter = (0, express_rate_limit_1.default)({
     windowMs: env_1.env.RATE_LIMIT_WINDOW_MS,
     max: env_1.env.RATE_LIMIT_MAX_REQUESTS,

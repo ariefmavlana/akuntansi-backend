@@ -4,9 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.requireFeature = exports.authorize = exports.authenticate = void 0;
-const jwt_1 = require("@/utils/jwt");
-const response_1 = require("@/utils/response");
-const database_1 = __importDefault(require("@/config/database"));
+const jwt_1 = require("../utils/jwt");
+const response_1 = require("../utils/response");
+const database_1 = __importDefault(require("../config/database"));
 const authenticate = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;

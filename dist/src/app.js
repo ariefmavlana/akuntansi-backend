@@ -8,12 +8,11 @@ const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const compression_1 = __importDefault(require("compression"));
 const morgan_1 = __importDefault(require("morgan"));
-const env_1 = require("@/config/env");
-const error_middleware_1 = require("@/middleware/error.middleware");
-const rate_limit_middleware_1 = require("@/middleware/rate-limit.middleware");
-const logger_1 = __importDefault(require("@/utils/logger"));
-// TODO: Import routes when created
-// import routes from '@/routes';
+const env_1 = require("./config/env");
+const error_middleware_1 = require("./middleware/error.middleware");
+const rate_limit_middleware_1 = require("./middleware/rate-limit.middleware");
+const logger_1 = __importDefault(require("./utils/logger"));
+const routes_1 = __importDefault(require("./routes"));
 const app = (0, express_1.default)();
 // Security middleware
 app.use((0, helmet_1.default)());
@@ -49,8 +48,7 @@ app.get('/health', (req, res) => {
     });
 });
 // API routes
-// TODO: Uncomment when routes are created
-// app.use(`/api/${env.API_VERSION}`, routes);
+app.use(`/api/${env_1.env.API_VERSION}`, routes_1.default);
 // Error handling
 app.use(error_middleware_1.notFoundHandler);
 app.use(error_middleware_1.errorHandler);

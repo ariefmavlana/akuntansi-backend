@@ -51,7 +51,7 @@ export class ResponseUtil {
       error: {
         code,
         message,
-        ...(details && { details }),
+        ...(details !== undefined && { details }),
       },
     };
 
@@ -82,3 +82,23 @@ export class ResponseUtil {
     return this.error(res, 'INTERNAL_ERROR', message, 500);
   }
 }
+
+// Convenience exports
+export const successResponse = <T>(
+  res: Response,
+  data: T,
+  message?: string,
+  statusCode?: number,
+  meta?: ApiResponse<T>['meta']
+) => ResponseUtil.success(res, data, message, statusCode, meta);
+
+export const errorResponse = (
+  res: Response,
+  code: string,
+  message: string,
+  statusCode?: number,
+  details?: unknown
+) => ResponseUtil.error(res, code, message, statusCode, details);
+
+export const createdResponse = <T>(res: Response, data: T, message?: string) =>
+  ResponseUtil.created(res, data, message);

@@ -12,13 +12,13 @@ export class JwtUtil {
   static generateAccessToken(payload: JwtPayload): string {
     return jwt.sign(payload, env.JWT_SECRET, {
       expiresIn: env.JWT_EXPIRES_IN,
-    });
+    } as any);
   }
 
   static generateRefreshToken(payload: JwtPayload): string {
     return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
       expiresIn: env.JWT_REFRESH_EXPIRES_IN,
-    });
+    } as any);
   }
 
   static verifyAccessToken(token: string): JwtPayload {
@@ -56,3 +56,8 @@ export class JwtUtil {
     };
   }
 }
+
+// Convenience exports
+export const generateTokens = (payload: JwtPayload) => JwtUtil.generateTokenPair(payload);
+export const verifyToken = (token: string, type: 'access' | 'refresh' = 'access') =>
+  type === 'access' ? JwtUtil.verifyAccessToken(token) : JwtUtil.verifyRefreshToken(token);

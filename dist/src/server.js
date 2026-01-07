@@ -4,9 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const app_1 = __importDefault(require("./app"));
-const env_1 = require("@/config/env");
-const logger_1 = __importDefault(require("@/utils/logger"));
-const database_1 = __importDefault(require("@/config/database"));
+const env_1 = require("./config/env");
+const logger_1 = __importDefault(require("./utils/logger"));
+const database_1 = __importDefault(require("./config/database"));
 const startServer = async () => {
     try {
         // Test database connection

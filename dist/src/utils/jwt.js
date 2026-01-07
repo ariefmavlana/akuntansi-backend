@@ -3,9 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.JwtUtil = void 0;
+exports.verifyToken = exports.generateTokens = exports.JwtUtil = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const env_1 = require("@/config/env");
+const env_1 = require("../config/env");
 class JwtUtil {
     static generateAccessToken(payload) {
         return jsonwebtoken_1.default.sign(payload, env_1.env.JWT_SECRET, {
@@ -53,3 +53,8 @@ class JwtUtil {
     }
 }
 exports.JwtUtil = JwtUtil;
+// Convenience exports
+const generateTokens = (payload) => JwtUtil.generateTokenPair(payload);
+exports.generateTokens = generateTokens;
+const verifyToken = (token, type = 'access') => type === 'access' ? JwtUtil.verifyAccessToken(token) : JwtUtil.verifyRefreshToken(token);
+exports.verifyToken = verifyToken;

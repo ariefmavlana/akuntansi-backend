@@ -38,3 +38,9 @@ export class PasswordUtil {
     };
   }
 }
+
+// Convenience exports
+export const hashPassword = (password: string) => PasswordUtil.hash(password);
+export const comparePassword = (password: string, hashedPassword: string) =>
+  PasswordUtil.compare(password, hashedPassword);
+export const validatePasswordStrength = (password: string) => PasswordUtil.validateStrength(password);

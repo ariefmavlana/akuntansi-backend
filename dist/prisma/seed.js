@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const prisma = new client_1.PrismaClient();
 async function main() {
     console.log('🌱 Starting seed...');
@@ -47,7 +47,7 @@ async function main() {
     });
     console.log('✅ Company settings created');
     // Create admin user
-    const hashedPassword = await bcryptjs_1.default.hash('admin123', 10);
+    const hashedPassword = await bcrypt_1.default.hash('admin123', 10);
     const adminUser = await prisma.pengguna.upsert({
         where: { email: 'admin@akuntansi.id' },
         update: {},

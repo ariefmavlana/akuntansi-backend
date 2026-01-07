@@ -1,3 +1,5 @@
+import { Role } from '@prisma/client';
+
 export interface PaginationParams {
   page: number;
   limit: number;
@@ -73,3 +75,4 @@ export interface ChangePasswordDto {
   currentPassword: string;
   newPassword: string;
 }
+

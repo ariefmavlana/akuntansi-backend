@@ -4,8 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.asyncHandler = exports.notFoundHandler = exports.errorHandler = exports.AppError = void 0;
-const response_1 = require("@/utils/response");
-const logger_1 = __importDefault(require("@/utils/logger"));
+const response_1 = require("../utils/response");
+const logger_1 = __importDefault(require("../utils/logger"));
 const zod_1 = require("zod");
 const client_1 = require("@prisma/client");
 class AppError extends Error {
