@@ -20,4 +20,5 @@ __exportStar(require("./auth.validator"), exports);
 __exportStar(require("./user.validator"), exports);
 __exportStar(require("./company.validator"), exports);
 __exportStar(require("./coa.validator"), exports);
+__exportStar(require("./transaction.validator"), exports);
 // ... more validators will be added

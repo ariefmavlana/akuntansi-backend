@@ -5,4 +5,5 @@ export * from './auth.validator';
 export * from './user.validator';
 export * from './company.validator';
 export * from './coa.validator';
+export * from './transaction.validator';
 // ... more validators will be added
