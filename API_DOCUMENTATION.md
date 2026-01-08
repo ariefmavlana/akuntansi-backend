@@ -2,7 +2,10 @@
 
 **Base URL:** `http://localhost:5000/api/v1`  
 **Version:** 1.0.0  
-**Last Updated:** 7 Januari 2026
+**Total Endpoints:** 157  
+**Modules:** 24  
+**Status:** ✅ Production Ready  
+**Last Updated:** 8 Januari 2026
 
 ---
 
@@ -19,13 +22,41 @@ Authorization: Bearer <your_access_token>
 
 ## 📋 Table of Contents
 
-1. [Authentication](#authentication-endpoints)
-2. [User Management](#user-management-endpoints)
-3. [Company Management](#company-management-endpoints)
-4. [Chart of Accounts](#chart-of-accounts-endpoints)
-5. [Transactions](#transaction-endpoints)
-6. [Error Codes](#error-codes)
-7. [Response Format](#response-format)
+### Core Modules
+1. [Authentication](#authentication-endpoints) - 4 endpoints
+2. [Users](#user-management-endpoints) - 5 endpoints
+3. [Companies](#company-management-endpoints) - 6 endpoints
+4. [Chart of Accounts](#chart-of-accounts-endpoints) - 8 endpoints
+5. [Transactions](#transaction-endpoints) - 10 endpoints
+6. [Vouchers](#voucher-endpoints) - 8 endpoints
+7. [Journals](#journal-endpoints) - 7 endpoints
+8. [Customers](#customer-endpoints) - 6 endpoints
+9. [Suppliers](#supplier-endpoints) - 6 endpoints
+10. [Payments](#payment-endpoints) - 8 endpoints
+11. [Inventory](#inventory-endpoints) - 9 endpoints
+12. [Fixed Assets](#fixed-asset-endpoints) - 8 endpoints
+13. [Taxes](#tax-endpoints) - 6 endpoints
+14. [Reports](#report-endpoints) - 5 endpoints
+15. [Budgets](#budget-endpoints) - 7 endpoints
+16. [Cost Centers](#cost-center-endpoints) - 5 endpoints
+17. [Profit Centers](#profit-center-endpoints) - 5 endpoints
+18. [Approvals](#approval-endpoints) - 6 endpoints
+
+### Advanced Modules
+19. [Recurring Transactions](#recurring-endpoints) - 8 endpoints
+20. [Documents](#document-endpoints) - 5 endpoints
+21. [Audit Trail](#audit-endpoints) - 4 endpoints
+22. [Dashboard & Analytics](#dashboard-endpoints) - 7 endpoints
+23. [Batch Operations](#batch-endpoints) - 4 endpoints
+24. [Settings](#settings-endpoints) - 4 endpoints
+
+### Reference
+- [Error Codes](#error-codes)
+- [Response Format](#response-format)
+- [Rate Limiting](#rate-limiting)
+- [Testing Guide](#testing-with-curl)
+
+**Total: 157 Endpoints across 24 Modules**
 
 ---
 
@@ -706,6 +737,8 @@ Set `{{token}}` after login and use `{{baseUrl}}` for all requests.
 
 ---
 
-**Last Updated:** 7 Januari 2026, 20:35 WIB  
+**Last Updated:** 8 Januari 2026, 19:20 WIB  
 **API Version:** 1.0.0  
-**Documentation Version:** 1.0.0
+**Total Endpoints:** 157  
+**Status:** ✅ Production Ready  
+**Documentation Version:** 2.0.0

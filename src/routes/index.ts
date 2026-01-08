@@ -21,6 +21,8 @@ import recurringRoutes from './recurring.routes';
 import documentRoutes from './document.routes';
 import auditRoutes from './audit.routes';
 import dashboardRoutes from './dashboard.routes';
+import batchRoutes from './batch.routes';
+import settingsRoutes from './settings.routes';
 
 const router = Router();
 
@@ -46,5 +48,7 @@ router.use('/recurring', recurringRoutes);
 router.use('/documents', documentRoutes);
 router.use('/audit', auditRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/batch', batchRoutes);
+router.use('/settings', settingsRoutes);
 
 export default router;
