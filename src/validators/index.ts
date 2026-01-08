@@ -1,6 +1,3 @@
-// Barrel file for all validation schemas
-// Export all validators here as they are created
-
 export * from './auth.validator';
 export * from './user.validator';
 export * from './company.validator';
@@ -14,4 +11,8 @@ export * from './payment.validator';
 export * from './tax.validator';
 export * from './inventory.validator';
 export * from './fixedAsset.validator';
-// ... more validators will be added
+export * from './report.validator';
+export * from './costCenter.validator';
+export * from './profitCenter.validator';
+export * from './budget.validator';
+export * from './approval.validator';

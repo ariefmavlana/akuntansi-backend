@@ -1,6 +1,4 @@
 "use strict";
-// Barrel file for all validation schemas
-// Export all validators here as they are created
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -29,4 +27,8 @@ __exportStar(require("./payment.validator"), exports);
 __exportStar(require("./tax.validator"), exports);
 __exportStar(require("./inventory.validator"), exports);
 __exportStar(require("./fixedAsset.validator"), exports);
-// ... more validators will be added
+__exportStar(require("./report.validator"), exports);
+__exportStar(require("./costCenter.validator"), exports);
+__exportStar(require("./profitCenter.validator"), exports);
+__exportStar(require("./budget.validator"), exports);
+__exportStar(require("./approval.validator"), exports);

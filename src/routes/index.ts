@@ -9,13 +9,21 @@ import journalRoutes from './journal.routes';
 import customerRoutes from './customer.routes';
 import supplierRoutes from './supplier.routes';
 import paymentRoutes from './payment.routes';
-import taxRoutes from './tax.routes';
 import inventoryRoutes from './inventory.routes';
 import fixedAssetRoutes from './fixedAsset.routes';
+import taxRoutes from './tax.routes';
+import reportRoutes from './report.routes';
+import costCenterRoutes from './costCenter.routes';
+import profitCenterRoutes from './profitCenter.routes';
+import budgetRoutes from './budget.routes';
+import approvalRoutes from './approval.routes';
+import recurringRoutes from './recurring.routes';
+import documentRoutes from './document.routes';
+import auditRoutes from './audit.routes';
+import dashboardRoutes from './dashboard.routes';
 
 const router = Router();
 
-// Mount routes
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/companies', companyRoutes);
@@ -26,17 +34,17 @@ router.use('/journals', journalRoutes);
 router.use('/customers', customerRoutes);
 router.use('/suppliers', supplierRoutes);
 router.use('/payments', paymentRoutes);
-router.use('/tax', taxRoutes);
 router.use('/inventory', inventoryRoutes);
 router.use('/fixed-assets', fixedAssetRoutes);
-
-// Health check for API
-router.get('/health', (req, res) => {
-    res.json({
-        status: 'OK',
-        message: 'API is running',
-        timestamp: new Date().toISOString(),
-    });
-});
+router.use('/taxes', taxRoutes);
+router.use('/reports', reportRoutes);
+router.use('/cost-centers', costCenterRoutes);
+router.use('/profit-centers', profitCenterRoutes);
+router.use('/budgets', budgetRoutes);
+router.use('/approvals', approvalRoutes);
+router.use('/recurring', recurringRoutes);
+router.use('/documents', documentRoutes);
+router.use('/audit', auditRoutes);
+router.use('/dashboard', dashboardRoutes);
 
 export default router;

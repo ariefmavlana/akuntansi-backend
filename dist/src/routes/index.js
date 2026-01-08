@@ -14,11 +14,19 @@ const journal_routes_1 = __importDefault(require("./journal.routes"));
 const customer_routes_1 = __importDefault(require("./customer.routes"));
 const supplier_routes_1 = __importDefault(require("./supplier.routes"));
 const payment_routes_1 = __importDefault(require("./payment.routes"));
-const tax_routes_1 = __importDefault(require("./tax.routes"));
 const inventory_routes_1 = __importDefault(require("./inventory.routes"));
 const fixedAsset_routes_1 = __importDefault(require("./fixedAsset.routes"));
+const tax_routes_1 = __importDefault(require("./tax.routes"));
+const report_routes_1 = __importDefault(require("./report.routes"));
+const costCenter_routes_1 = __importDefault(require("./costCenter.routes"));
+const profitCenter_routes_1 = __importDefault(require("./profitCenter.routes"));
+const budget_routes_1 = __importDefault(require("./budget.routes"));
+const approval_routes_1 = __importDefault(require("./approval.routes"));
+const recurring_routes_1 = __importDefault(require("./recurring.routes"));
+const document_routes_1 = __importDefault(require("./document.routes"));
+const audit_routes_1 = __importDefault(require("./audit.routes"));
+const dashboard_routes_1 = __importDefault(require("./dashboard.routes"));
 const router = (0, express_1.Router)();
-// Mount routes
 router.use('/auth', auth_routes_1.default);
 router.use('/users', user_routes_1.default);
 router.use('/companies', company_routes_1.default);
@@ -29,15 +37,16 @@ router.use('/journals', journal_routes_1.default);
 router.use('/customers', customer_routes_1.default);
 router.use('/suppliers', supplier_routes_1.default);
 router.use('/payments', payment_routes_1.default);
-router.use('/tax', tax_routes_1.default);
 router.use('/inventory', inventory_routes_1.default);
 router.use('/fixed-assets', fixedAsset_routes_1.default);
-// Health check for API
-router.get('/health', (req, res) => {
-    res.json({
-        status: 'OK',
-        message: 'API is running',
-        timestamp: new Date().toISOString(),
-    });
-});
+router.use('/taxes', tax_routes_1.default);
+router.use('/reports', report_routes_1.default);
+router.use('/cost-centers', costCenter_routes_1.default);
+router.use('/profit-centers', profitCenter_routes_1.default);
+router.use('/budgets', budget_routes_1.default);
+router.use('/approvals', approval_routes_1.default);
+router.use('/recurring', recurring_routes_1.default);
+router.use('/documents', document_routes_1.default);
+router.use('/audit', audit_routes_1.default);
+router.use('/dashboard', dashboard_routes_1.default);
 exports.default = router;
