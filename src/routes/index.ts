@@ -23,12 +23,18 @@ import auditRoutes from './audit.routes';
 import dashboardRoutes from './dashboard.routes';
 import batchRoutes from './batch.routes';
 import settingsRoutes from './settings.routes';
+import contractRoutes from './contract.routes';
+import employeeRoutes from './employee.routes';
+import payrollRoutes from './payroll.routes';
 
 const router = Router();
 
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/companies', companyRoutes);
+router.use('/contracts', contractRoutes);
+router.use('/employees', employeeRoutes);
+router.use('/payrolls', payrollRoutes);
 router.use('/coa', coaRoutes);
 router.use('/transactions', transactionRoutes);
 router.use('/vouchers', voucherRoutes);

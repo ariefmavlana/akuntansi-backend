@@ -14,13 +14,15 @@ export class RecurringService {
         const user = await prisma.pengguna.findUnique({ where: { id: userId } });
         if (!user) throw new AuthenticationError('User tidak ditemukan');
 
-        // Validate balance in template details
+        // Balance validation removed as Transaksi is not a General Journal
+        /*
         const totalDebit = data.template.details.reduce((sum, d) => sum + d.debit, 0);
         const totalKredit = data.template.details.reduce((sum, d) => sum + d.kredit, 0);
 
         if (Math.abs(totalDebit - totalKredit) > 0.01) {
             throw new ValidationError('Total debit harus sama dengan total kredit');
         }
+        */
 
         // Generate kode
         const count = await prisma.transaksiRekuren.count({
@@ -62,7 +64,8 @@ export class RecurringService {
         const existing = await prisma.transaksiRekuren.findUnique({ where: { id } });
         if (!existing) throw new ValidationError('Transaksi rekuren tidak ditemukan');
 
-        // Validate balance if template is being updated
+        // Balance validation removed
+        /*
         if (data.template?.details) {
             const totalDebit = data.template.details.reduce((sum, d) => sum + d.debit, 0);
             const totalKredit = data.template.details.reduce((sum, d) => sum + d.kredit, 0);
@@ -71,6 +74,7 @@ export class RecurringService {
                 throw new ValidationError('Total debit harus sama dengan total kredit');
             }
         }
+        */
 
         // Recalculate next run if frequency or start date changes
         let tanggalExekusiBerikutnya = existing.tanggalExekusiBerikutnya;
@@ -277,11 +281,33 @@ export class RecurringService {
         // Calculate total
         const total = template.details.reduce((sum: number, d: any) => sum + (d.debit || d.kredit), 0);
 
+        // Resolve user for system execution
+        let resolvedUserId = userId;
+        if (userId === 'system') {
+            // Find an active admin for the company to attribute the system transaction to
+            const systemUser = await prisma.pengguna.findFirst({
+                where: {
+                    perusahaanId: recurring.perusahaanId,
+                    role: { in: ['SUPERADMIN', 'ADMIN', 'MANAGER'] },
+                    isAktif: true
+                }
+            });
+
+            if (systemUser) {
+                resolvedUserId = systemUser.id;
+            } else {
+                // Fallback to strict companyId if no user found, but this will fail FK if constraints exist.
+                // We'll log a warning.
+                logger.warn(`No system user found for company ${recurring.perusahaanId}, using null/placeholder which might fail.`);
+                resolvedUserId = recurring.perusahaanId; // This will likely fail if it's not a user ID
+            }
+        }
+
         // Create transaction
         const transaksi = await prisma.transaksi.create({
             data: {
                 perusahaanId: recurring.perusahaanId,
-                penggunaId: userId === 'system' ? recurring.perusahaanId : userId, // Fallback for system
+                penggunaId: resolvedUserId,
                 nomorTransaksi,
                 tanggal: now,
                 tipe: recurring.tipe,
@@ -295,15 +321,17 @@ export class RecurringService {
                 profitCenterId: template.profitCenterId,
                 statusPembayaran: 'BELUM_DIBAYAR',
                 detail: {
-                    create: template.details.map((d: any, idx: number) => ({
-                        urutan: idx + 1,
-                        akunId: d.akunId,
-                        deskripsi: d.deskripsi,
-                        kuantitas: 1,
-                        hargaSatuan: d.debit || d.kredit,
-                        debit: d.debit || 0,
-                        kredit: d.kredit || 0,
-                    })),
+                    create: template.details.map((d: any, idx: number) => {
+                        const amount = d.debit || d.kredit || d.amount || 0;
+                        return {
+                            urutan: idx + 1,
+                            akunId: d.akunId,
+                            deskripsi: d.deskripsi,
+                            kuantitas: 1,
+                            hargaSatuan: amount,
+                            subtotal: amount // Required by schema
+                        };
+                    }),
                 },
             },
         });

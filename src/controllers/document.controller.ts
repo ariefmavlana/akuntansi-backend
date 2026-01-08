@@ -1,119 +1,67 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '@/middlewares/auth.middleware';
 import { documentService } from '@/services/document.service';
-import type {
-    UploadDocumentInput,
-    GetDocumentsInput,
-    UpdateDocumentInput,
-} from '@/validators/document.validator';
+import logger from '@/utils/logger';
 
 export class DocumentController {
-    // Upload document
-    async upload(req: Request, res: Response, next: NextFunction) {
+    // Upload Document
+    static async uploadDocument(req: AuthenticatedRequest, res: Response) {
         try {
-            const data = req.body as UploadDocumentInput;
-            const file = req.file;
-            const userId = (req as any).user.id;
-
-            if (!file) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'File tidak ditemukan',
-                });
+            if (!req.file) {
+                return res.status(400).json({ status: 'error', message: 'No file uploaded' });
             }
 
-            const document = await documentService.uploadDocument(data, file, userId);
+            // Multer puts fields in req.body. 
+            // We pass req.body, req.file, and userId.
+            const document = await documentService.uploadDocument(
+                req.body,
+                req.file,
+                req.user!.userId
+            );
 
-            return res.status(201).json({
-                success: true,
-                message: 'Dokumen berhasil diupload',
-                data: document,
+            res.status(201).json({
+                status: 'success',
+                data: document
             });
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            logger.error('Upload error:', error);
+            res.status(400).json({ status: 'error', message: error.message });
         }
     }
 
-    // Get all documents
-    async getAll(req: Request, res: Response, next: NextFunction) {
+    // Get Documents (List)
+    static async getDocuments(req: AuthenticatedRequest, res: Response) {
         try {
-            const filters = req.query as unknown as GetDocumentsInput;
-            const result = await documentService.getDocuments(filters);
+            const { transaksiId, voucherId, asetTetapId } = req.query;
 
-            return res.json({
-                success: true,
-                data: result.data,
-                pagination: result.pagination,
+            const docs = await documentService.getDocuments({
+                transaksiId: transaksiId as string,
+                voucherId: voucherId as string,
+                asetTetapId: asetTetapId as string
             });
-        } catch (error) {
-            next(error);
+
+            res.json({
+                status: 'success',
+                data: docs
+            });
+        } catch (error: any) {
+            res.status(400).json({ status: 'error', message: error.message });
         }
     }
 
-    // Get single document
-    async getById(req: Request, res: Response, next: NextFunction) {
+    // Delete Document
+    static async deleteDocument(req: AuthenticatedRequest, res: Response) {
         try {
-            const { id } = req.params;
-            const document = await documentService.getDocument(id);
-
-            return res.json({
-                success: true,
-                data: document,
+            await documentService.deleteDocument(
+                req.params.id,
+                req.user!.userId
+            );
+            res.json({
+                status: 'success',
+                message: 'Document deleted successfully'
             });
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    // Download document
-    async download(req: Request, res: Response, next: NextFunction) {
-        try {
-            const { id } = req.params;
-            const userId = (req as any).user.id;
-
-            const { document, filePath } = await documentService.getDocumentPath(id, userId);
-
-            return res.download(filePath, document.nama, (err) => {
-                if (err) {
-                    next(err);
-                }
-            });
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    // Update document metadata
-    async update(req: Request, res: Response, next: NextFunction) {
-        try {
-            const { id } = req.params;
-            const data = req.body as UpdateDocumentInput;
-
-            const document = await documentService.updateDocument(id, data);
-
-            return res.json({
-                success: true,
-                message: 'Dokumen berhasil diupdate',
-                data: document,
-            });
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    // Delete document
-    async delete(req: Request, res: Response, next: NextFunction) {
-        try {
-            const { id } = req.params;
-            const result = await documentService.deleteDocument(id);
-
-            return res.json({
-                success: true,
-                message: result.message,
-            });
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            res.status(400).json({ status: 'error', message: error.message });
         }
     }
 }
-
-export const documentController = new DocumentController();

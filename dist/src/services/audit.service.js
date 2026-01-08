@@ -6,191 +6,125 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.auditService = exports.AuditService = void 0;
 const database_1 = __importDefault(require("../config/database"));
 const logger_1 = __importDefault(require("../utils/logger"));
-const auth_service_1 = require("./auth.service");
 class AuditService {
-    // Create audit log (called internally by other services)
-    async createAuditLog(data) {
-        const auditLog = await database_1.default.jejakAudit.create({
-            data: {
-                perusahaanId: data.perusahaanId,
-                penggunaId: data.penggunaId,
-                aksi: data.aksi,
-                modul: data.modul,
-                subModul: data.subModul,
-                namaTabel: data.namaTabel,
-                idData: data.idData,
-                dataSebelum: data.dataSebelum || null,
-                dataSesudah: data.dataSesudah || null,
-                perubahan: data.perubahan || null,
-                ipAddress: data.ipAddress,
-                userAgent: data.userAgent,
-                lokasi: data.lokasi,
-                keterangan: data.keterangan,
-            },
-        });
-        logger_1.default.info(`Audit log created: ${data.aksi} on ${data.namaTabel}:${data.idData}`);
-        return auditLog;
-    }
-    // Get audit logs with comprehensive filtering
-    async getAuditLogs(filters) {
-        const where = { perusahaanId: filters.perusahaanId };
-        if (filters.penggunaId)
-            where.penggunaId = filters.penggunaId;
-        if (filters.modul)
-            where.modul = filters.modul;
-        if (filters.subModul)
-            where.subModul = filters.subModul;
-        if (filters.aksi)
-            where.aksi = filters.aksi;
-        if (filters.namaTabel)
-            where.namaTabel = filters.namaTabel;
-        if (filters.idData)
-            where.idData = filters.idData;
-        if (filters.startDate || filters.endDate) {
-            where.createdAt = {};
-            if (filters.startDate)
-                where.createdAt.gte = new Date(filters.startDate);
-            if (filters.endDate)
-                where.createdAt.lte = new Date(filters.endDate);
+    /**
+     * Log user activity to JejakAudit table.
+     * designed to be "fire and forget" or awaited depending on critical nature.
+     */
+    async logActivity(data) {
+        try {
+            // Calculate diff if both before and after exist
+            let perubahan = null;
+            if (data.dataSebelum && data.dataSesudah) {
+                perubahan = this.calculateDiff(data.dataSebelum, data.dataSesudah);
+            }
+            // Create log
+            await database_1.default.jejakAudit.create({
+                data: {
+                    perusahaanId: data.perusahaanId,
+                    penggunaId: data.penggunaId,
+                    aksi: data.aksi,
+                    modul: data.modul,
+                    subModul: data.subModul,
+                    namaTabel: data.namaTabel,
+                    idData: data.idData,
+                    dataSebelum: data.dataSebelum ?? undefined,
+                    dataSesudah: data.dataSesudah ?? undefined,
+                    perubahan: perubahan ?? undefined,
+                    ipAddress: data.ipAddress,
+                    userAgent: data.userAgent,
+                    keterangan: data.keterangan
+                }
+            });
+            // Do not log success to console to stay quiet, only errors
         }
-        const page = filters.page || 1;
-        const limit = filters.limit || 50;
+        catch (error) {
+            // Fallback: Just log to file system if DB logging fails
+            logger_1.default.error('Failed to write Audit Log:', error);
+            logger_1.default.error('Audit Data:', JSON.stringify(data));
+        }
+    }
+    /**
+     * Get Audit Logs with pagination and filters
+     */
+    async getAuditLogs(perusahaanId, params) {
+        const page = Number(params.page) || 1;
+        const limit = Number(params.limit) || 20;
         const skip = (page - 1) * limit;
-        const [data, total] = await Promise.all([
+        const where = { perusahaanId };
+        if (params.module)
+            where.modul = params.module;
+        if (params.action)
+            where.aksi = params.action;
+        if (params.userName) {
+            where.pengguna = { namaLengkap: { contains: params.userName, mode: 'insensitive' } };
+        }
+        if (params.startDate && params.endDate) {
+            where.createdAt = { gte: params.startDate, lte: params.endDate };
+        }
+        const [total, logs] = await Promise.all([
+            database_1.default.jejakAudit.count({ where }),
             database_1.default.jejakAudit.findMany({
                 where,
                 skip,
                 take: limit,
                 orderBy: { createdAt: 'desc' },
-                include: {
-                    pengguna: {
-                        select: {
-                            namaLengkap: true,
-                            email: true,
-                            role: true,
-                        },
-                    },
-                },
-            }),
-            database_1.default.jejakAudit.count({ where }),
+                include: { pengguna: { select: { namaLengkap: true, email: true } } }
+            })
         ]);
-        return {
-            data,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit),
-            },
-        };
-    }
-    // Get single audit log
-    async getAuditLog(id) {
-        const auditLog = await database_1.default.jejakAudit.findUnique({
-            where: { id },
-            include: {
-                pengguna: {
-                    select: {
-                        namaLengkap: true,
-                        email: true,
-                        role: true,
-                    },
-                },
-            },
-        });
-        if (!auditLog)
-            throw new auth_service_1.ValidationError('Audit log tidak ditemukan');
-        return auditLog;
-    }
-    // Get audit logs for a specific record (history tracking)
-    async getAuditByRecord(filters) {
-        const logs = await database_1.default.jejakAudit.findMany({
-            where: {
-                namaTabel: filters.namaTabel,
-                idData: filters.idData,
-            },
-            orderBy: { createdAt: 'desc' },
-            include: {
-                pengguna: {
-                    select: {
-                        namaLengkap: true,
-                        email: true,
-                        role: true,
-                    },
-                },
-            },
-        });
         return {
             data: logs,
-            total: logs.length,
-        };
-    }
-    // Get user activity timeline
-    async getUserActivity(params) {
-        const where = { penggunaId: params.userId };
-        if (params.startDate || params.endDate) {
-            where.createdAt = {};
-            if (params.startDate)
-                where.createdAt.gte = new Date(params.startDate);
-            if (params.endDate)
-                where.createdAt.lte = new Date(params.endDate);
-        }
-        const page = params.page || 1;
-        const limit = params.limit || 50;
-        const skip = (page - 1) * limit;
-        const [data, total] = await Promise.all([
-            database_1.default.jejakAudit.findMany({
-                where,
-                skip,
-                take: limit,
-                orderBy: { createdAt: 'desc' },
-            }),
-            database_1.default.jejakAudit.count({ where }),
-        ]);
-        // Calculate activity statistics
-        const stats = await database_1.default.jejakAudit.groupBy({
-            by: ['aksi'],
-            where,
-            _count: {
-                aksi: true,
-            },
-        });
-        return {
-            data,
-            pagination: {
+            meta: {
+                total,
                 page,
                 limit,
-                total,
-                totalPages: Math.ceil(total / limit),
-            },
-            statistics: {
-                totalActions: total,
-                byAction: stats.reduce((acc, stat) => {
-                    acc[stat.aksi] = stat._count.aksi;
-                    return acc;
-                }, {}),
-            },
+                totalPages: Math.ceil(total / limit)
+            }
         };
     }
-    // Helper: Calculate diff between two objects
-    calculateDiff(before, after) {
+    /**
+     * Get Single Audit Log
+     */
+    async getAuditLog(id) {
+        return database_1.default.jejakAudit.findUnique({
+            where: { id },
+            include: { pengguna: { select: { namaLengkap: true, email: true } } }
+        });
+    }
+    /**
+     * Get Audit Logs for specific record
+     */
+    async getAuditByRecord(perusahaanId, table, idData) {
+        return database_1.default.jejakAudit.findMany({
+            where: { perusahaanId, namaTabel: table, idData },
+            orderBy: { createdAt: 'desc' },
+            include: { pengguna: { select: { namaLengkap: true } } }
+        });
+    }
+    /**
+     * Get User Activity
+     */
+    async getUserActivity(userId, limit = 10) {
+        return database_1.default.jejakAudit.findMany({
+            where: { penggunaId: userId },
+            orderBy: { createdAt: 'desc' },
+            take: limit
+        });
+    }
+    calculateDiff(obj1, obj2) {
+        // Simple shallow diff for now
+        // In real world, use 'deep-diff' library or recursions
         const diff = {};
-        // Get all unique keys
-        const allKeys = new Set([
-            ...Object.keys(before || {}),
-            ...Object.keys(after || {}),
-        ]);
-        allKeys.forEach((key) => {
-            const beforeValue = before?.[key];
-            const afterValue = after?.[key];
-            if (JSON.stringify(beforeValue) !== JSON.stringify(afterValue)) {
+        const allKeys = new Set([...Object.keys(obj1), ...Object.keys(obj2)]);
+        allKeys.forEach(key => {
+            if (JSON.stringify(obj1[key]) !== JSON.stringify(obj2[key])) {
                 diff[key] = {
-                    from: beforeValue,
-                    to: afterValue,
+                    old: obj1[key],
+                    new: obj2[key]
                 };
             }
         });
-        return diff;
+        return Object.keys(diff).length > 0 ? diff : null;
     }
 }
 exports.AuditService = AuditService;

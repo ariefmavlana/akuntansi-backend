@@ -1,132 +1,68 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '@/middlewares/auth.middleware';
 import { dashboardService } from '@/services/dashboard.service';
-import type {
-    GetFinancialKPIsInput,
-    GetCashFlowSummaryInput,
-    GetRevenueAnalyticsInput,
-    GetExpenseAnalyticsInput,
-    GetProfitabilityInput,
-    GetBalanceTrendInput,
-    GetTopAccountsInput,
-} from '@/validators/dashboard.validator';
+import logger from '@/utils/logger';
 
 export class DashboardController {
-    // Get Financial KPIs
-    async getKPIs(req: Request, res: Response, next: NextFunction) {
+    // Get Stats
+    static async getStats(req: AuthenticatedRequest, res: Response) {
         try {
-            const filters = req.query as unknown as GetFinancialKPIsInput;
-            const kpis = await dashboardService.getFinancialKPIs(filters);
+            const { startDate, endDate } = req.query;
+            const start = startDate ? new Date(startDate as string) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+            const end = endDate ? new Date(endDate as string) : new Date();
 
-            return res.json({
-                success: true,
-                data: kpis,
+            const stats = await dashboardService.getStats(req.user!.perusahaanId, start, end);
+
+            res.json({
+                status: 'success',
+                data: stats
             });
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            logger.error('Error fetching dashboard stats:', error);
+            res.status(500).json({ status: 'error', message: 'Failed to fetch stats' });
         }
     }
 
-    // Get Cash Flow Summary
-    async getCashFlow(req: Request, res: Response, next: NextFunction) {
+    // Get User Widgets
+    static async getWidgets(req: AuthenticatedRequest, res: Response) {
         try {
-            const filters = req.query as unknown as GetCashFlowSummaryInput;
-            const cashFlow = await dashboardService.getCashFlowSummary(filters);
-
-            return res.json({
-                success: true,
-                data: cashFlow,
+            const widgets = await dashboardService.getUserWidgets(req.user!.userId, req.user!.perusahaanId);
+            res.json({
+                status: 'success',
+                data: widgets
             });
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            res.status(500).json({ status: 'error', message: error.message });
         }
     }
 
-    // Get Revenue Analytics
-    async getRevenue(req: Request, res: Response, next: NextFunction) {
+    // Add Widget
+    static async createWidget(req: AuthenticatedRequest, res: Response) {
         try {
-            const filters = req.query as unknown as GetRevenueAnalyticsInput;
-            const revenue = await dashboardService.getRevenueAnalytics(filters);
-
-            return res.json({
-                success: true,
-                data: revenue.data,
-                meta: {
-                    currency: revenue.currency,
-                },
+            const widget = await dashboardService.createWidget(
+                req.user!.userId,
+                req.user!.perusahaanId,
+                req.body
+            );
+            res.status(201).json({
+                status: 'success',
+                data: widget
             });
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            res.status(400).json({ status: 'error', message: error.message });
         }
     }
 
-    // Get Expense Analytics
-    async getExpenses(req: Request, res: Response, next: NextFunction) {
+    // Delete Widget
+    static async deleteWidget(req: AuthenticatedRequest, res: Response) {
         try {
-            const filters = req.query as unknown as GetExpenseAnalyticsInput;
-            const expenses = await dashboardService.getExpenseAnalytics(filters);
-
-            return res.json({
-                success: true,
-                data: expenses.data,
-                meta: {
-                    currency: expenses.currency,
-                },
+            await dashboardService.deleteWidget(req.params.id, req.user!.userId);
+            res.json({
+                status: 'success',
+                message: 'Widget deleted'
             });
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    // Get Profitability Metrics
-    async getProfitability(req: Request, res: Response, next: NextFunction) {
-        try {
-            const filters = req.query as unknown as GetProfitabilityInput;
-            const profitability = await dashboardService.getProfitability(filters);
-
-            return res.json({
-                success: true,
-                data: profitability,
-            });
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    // Get Account Balance Trend
-    async getBalanceTrend(req: Request, res: Response, next: NextFunction) {
-        try {
-            const filters = req.query as unknown as GetBalanceTrendInput;
-            const trend = await dashboardService.getBalanceTrend(filters);
-
-            return res.json({
-                success: true,
-                data: trend.data,
-                meta: {
-                    currency: trend.currency,
-                },
-            });
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    // Get Top Accounts by Activity
-    async getTopAccounts(req: Request, res: Response, next: NextFunction) {
-        try {
-            const filters = req.query as unknown as GetTopAccountsInput;
-            const topAccounts = await dashboardService.getTopAccounts(filters);
-
-            return res.json({
-                success: true,
-                data: topAccounts.data,
-                meta: {
-                    currency: topAccounts.currency,
-                },
-            });
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            res.status(400).json({ status: 'error', message: error.message });
         }
     }
 }
-
-export const dashboardController = new DashboardController();

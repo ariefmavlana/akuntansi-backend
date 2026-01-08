@@ -7,8 +7,7 @@ class BatchController {
     async batchCreateTransactions(req, res, next) {
         try {
             const data = req.body;
-            const userId = req.user.id;
-            const result = await batch_service_1.batchService.processBatchTransactions(data, userId);
+            const result = await batch_service_1.batchService.processBatchTransactions(data, req.user.userId);
             return res.status(201).json({
                 success: true,
                 message: `Berhasil membuat ${result.results.length} transaksi`,
@@ -23,8 +22,7 @@ class BatchController {
     async batchProcessApprovals(req, res, next) {
         try {
             const data = req.body;
-            const userId = req.user.id;
-            const result = await batch_service_1.batchService.processBatchApprovals(data, userId);
+            const result = await batch_service_1.batchService.processBatchApprovals(data, req.user.userId);
             return res.json({
                 success: true,
                 message: `Berhasil memproses ${result.results.length} approval`,
@@ -39,8 +37,7 @@ class BatchController {
     async batchPostJournals(req, res, next) {
         try {
             const data = req.body;
-            const userId = req.user.id;
-            const result = await batch_service_1.batchService.processBatchJournalPosting(data, userId);
+            const result = await batch_service_1.batchService.processBatchJournalPosting(data, req.user.userId);
             return res.json({
                 success: true,
                 message: `Berhasil posting ${result.results.length} jurnal`,
@@ -55,8 +52,7 @@ class BatchController {
     async batchDelete(req, res, next) {
         try {
             const data = req.body;
-            const userId = req.user.id;
-            const result = await batch_service_1.batchService.processBatchDelete(data, userId);
+            const result = await batch_service_1.batchService.processBatchDelete(data, req.user.userId);
             return res.json({
                 success: true,
                 message: `Berhasil menghapus ${result.results.length} ${data.entityType}`,

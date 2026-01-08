@@ -11,6 +11,7 @@ import type {
     ReverseVoucherInput,
 } from '@/validators/voucher.validator';
 import { AuthenticationError, ValidationError } from './auth.service';
+import { journalService } from './journal.service';
 
 /**
  * Voucher Service
@@ -588,8 +589,8 @@ export class VoucherService {
                 throw new ValidationError('Voucher sudah diposting');
             }
 
-            // TODO: Create journal entries from voucher details
-            // This would involve creating JurnalUmum and JurnalDetail records
+            // Create journal entries automatically
+            await journalService.createFromVoucher(voucherId, requestingUserId);
 
             // Update voucher as posted
             const postedVoucher = await prisma.voucher.update({

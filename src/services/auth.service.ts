@@ -1,8 +1,10 @@
 import prisma from '@/config/database';
+import crypto from 'crypto';
 import { hashPassword, comparePassword } from '@/utils/password';
 import { generateTokens, verifyToken } from '@/utils/jwt';
 import logger from '@/utils/logger';
 import { Pengguna, Role } from '@prisma/client';
+import { auditService } from '@/services/audit.service';
 import type {
     RegisterInput,
     LoginInput,
@@ -288,7 +290,7 @@ export class AuthService {
 
     /**
      * Request password reset
-     * TODO: Implement email sending with reset token
+     * Generates a token and stores it in DB. Logs the token (simulating email).
      */
     async requestPasswordReset(data: ForgotPasswordInput): Promise<void> {
         try {
@@ -302,14 +304,22 @@ export class AuthService {
                 return;
             }
 
-            // TODO: Generate reset token and send email
-            // For now, just log
-            logger.info(`Password reset requested for: ${user.email}`);
+            // Generate Token
+            const token = crypto.randomUUID(); // Simple UUID token
+            const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 Hour
 
-            // In production:
-            // 1. Generate secure random token
-            // 2. Store token in database with expiry (e.g., 1 hour)
-            // 3. Send email with reset link
+            await prisma.passwordResetToken.create({
+                data: {
+                    email: user.email,
+                    token,
+                    expiresAt
+                }
+            });
+
+            // Log token (Mock Email Sending)
+            logger.info(`[MOCK EMAIL] Password reset token for ${user.email}: ${token}`);
+            logger.info(`[MOCK EMAIL] Link: https://app.example.com/reset-password?token=${token}`);
+
         } catch (error) {
             logger.error('Request password reset error:', error);
             throw error;
@@ -318,20 +328,41 @@ export class AuthService {
 
     /**
      * Reset password with token
-     * TODO: Implement token verification and password reset
      */
     async resetPassword(data: ResetPasswordInput): Promise<void> {
         try {
-            // TODO: Verify reset token from database
-            // For now, throw error
-            throw new ValidationError('Fitur reset password belum diimplementasikan');
+            const resetRecord = await prisma.passwordResetToken.findUnique({
+                where: { token: data.token }
+            });
 
-            // In production:
-            // 1. Verify token exists and not expired
-            // 2. Get user from token
-            // 3. Hash new password
-            // 4. Update user password
-            // 5. Delete/invalidate token
+            if (!resetRecord) {
+                throw new ValidationError('Token tidak valid');
+            }
+
+            if (resetRecord.used) {
+                throw new ValidationError('Token sudah digunakan');
+            }
+
+            if (new Date() > resetRecord.expiresAt) {
+                throw new ValidationError('Token sudah kadaluwarsa');
+            }
+
+            // Update Password
+            const hashedPassword = await hashPassword(data.newPassword);
+
+            await prisma.pengguna.update({
+                where: { email: resetRecord.email },
+                data: { password: hashedPassword }
+            });
+
+            // Mark token used
+            await prisma.passwordResetToken.update({
+                where: { id: resetRecord.id },
+                data: { used: true }
+            });
+
+            logger.info(`Password reset success for ${resetRecord.email}`);
+
         } catch (error) {
             logger.error('Reset password error:', error);
             throw error;
@@ -340,20 +371,44 @@ export class AuthService {
 
     /**
      * Logout user
-     * TODO: Implement token blacklist
+     * Adds refresh token to blacklist
      */
-    async logout(userId: string): Promise<void> {
+    async logout(userId: string, refreshToken?: string): Promise<void> {
         try {
-            logger.info(`User logged out: ${userId}`);
+            if (refreshToken) {
+                // Decode to get expiry if possible, or usually just set a standard expiry
+                // For simplicity, we set expiry to 7 days from now (standard refresh token life)
+                const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-            // TODO: Add refresh token to blacklist
-            // In production:
-            // 1. Store refresh token in Redis blacklist
-            // 2. Set expiry to match token expiry
-            // 3. Check blacklist on refresh token endpoint
+                await prisma.tokenBlacklist.create({
+                    data: {
+                        token: refreshToken,
+                        expiresAt
+                    }
+                });
+                logger.info(`Token blacklisted for user: ${userId}`);
+            }
+
+            // Audit Log
+            if (userId) {
+                const user = await prisma.pengguna.findUnique({ where: { id: userId } });
+                if (user) {
+                    auditService.logActivity({
+                        perusahaanId: user.perusahaanId,
+                        penggunaId: user.id,
+                        aksi: 'LOGOUT',
+                        modul: 'AUTH',
+                        namaTabel: 'Pengguna',
+                        idData: user.id,
+                        keterangan: 'User logged out'
+                    }).catch(err => logger.error('Audit Log Error:', err));
+                }
+            }
+
+            logger.info(`User logged out: ${userId}`);
         } catch (error) {
             logger.error('Logout error:', error);
-            throw error;
+            // Don't throw on logout error, just log it
         }
     }
 

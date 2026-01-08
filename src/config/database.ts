@@ -3,6 +3,7 @@ import { env } from './env';
 
 const prismaClientSingleton = (): PrismaClient => {
   return new PrismaClient({
+    datasourceUrl: env.DATABASE_URL,
     log: env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     errorFormat: 'pretty',
   });

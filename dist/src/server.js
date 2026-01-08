@@ -7,11 +7,13 @@ const app_1 = __importDefault(require("./app"));
 const env_1 = require("./config/env");
 const logger_1 = __importDefault(require("./utils/logger"));
 const database_1 = __importDefault(require("./config/database"));
+const recurring_scheduler_1 = require("./schedulers/recurring.scheduler");
 const startServer = async () => {
     try {
-        // Test database connection
         await database_1.default.$connect();
         logger_1.default.info('✅ Database connected successfully');
+        // Initialize Schedulers
+        (0, recurring_scheduler_1.initRecurringScheduler)();
         // Start server
         const server = app_1.default.listen(env_1.env.PORT, () => {
             logger_1.default.info(`🚀 Server running on port ${env_1.env.PORT} in ${env_1.env.NODE_ENV} mode`);

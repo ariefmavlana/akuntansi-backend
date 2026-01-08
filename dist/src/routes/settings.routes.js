@@ -2,8 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const settings_controller_1 = require("../controllers/settings.controller");
-const auth_middleware_1 = require("../middleware/auth.middleware");
-const validation_middleware_1 = require("../middleware/validation.middleware");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const validation_middleware_1 = require("../middlewares/validation.middleware");
 const settings_validator_1 = require("../validators/settings.validator");
 const router = (0, express_1.Router)();
 // All routes require authentication

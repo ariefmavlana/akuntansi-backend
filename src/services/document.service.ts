@@ -1,215 +1,97 @@
 import prisma from '@/config/database';
-import logger from '@/utils/logger';
-import { AuthenticationError, ValidationError } from './auth.service';
-import type {
-    UploadDocumentInput,
-    GetDocumentsInput,
-    UpdateDocumentInput,
-} from '@/validators/document.validator';
+import fs from 'fs';
 import path from 'path';
-import fs from 'fs/promises';
+import { UploadDocumentInput } from '@/validators/document.validator';
+import { AuthenticationError, ValidationError } from './auth.service';
+import { KategoriDokumen } from '@prisma/client';
 
 export class DocumentService {
-    private uploadDir = path.join(process.cwd(), 'uploads');
-
-    constructor() {
-        // Ensure upload directory exists
-        this.ensureUploadDir();
-    }
-
-    private async ensureUploadDir() {
-        try {
-            await fs.access(this.uploadDir);
-        } catch {
-            await fs.mkdir(this.uploadDir, { recursive: true });
-            logger.info('Upload directory created');
+    // Upload Document
+    async uploadDocument(
+        data: UploadDocumentInput,
+        file: Express.Multer.File,
+        userId: string
+    ) {
+        // 1. Validate Ownership / Existence of related entities
+        if (data.transaksiId) {
+            const tx = await prisma.transaksi.findUnique({ where: { id: data.transaksiId } });
+            if (!tx) throw new ValidationError('Transaksi tidak ditemukan');
         }
-    }
-
-    // Upload document
-    async uploadDocument(data: UploadDocumentInput, file: Express.Multer.File, userId: string) {
-        const user = await prisma.pengguna.findUnique({ where: { id: userId } });
-        if (!user) throw new AuthenticationError('User tidak ditemukan');
-
-        // Validate that at least one reference is provided
-        if (!data.transaksiId && !data.voucherId && !data.asetTetapId) {
-            throw new ValidationError('Harus terkait dengan transaksi, voucher, atau aset tetap');
+        if (data.voucherId) {
+            const voucher = await prisma.voucher.findUnique({ where: { id: data.voucherId } });
+            if (!voucher) throw new ValidationError('Voucher tidak ditemukan');
+        }
+        if (data.asetTetapId) {
+            const asset = await prisma.asetTetap.findUnique({ where: { id: data.asetTetapId } });
+            if (!asset) throw new ValidationError('Aset tidak ditemukan');
         }
 
-        // Store file metadata
-        const document = await prisma.dokumenTransaksi.create({
+        // 2. Save metadata to DB
+        const doc = await prisma.dokumenTransaksi.create({
             data: {
+                nama: file.originalname,
+                jenisFile: path.extname(file.originalname).substring(1), // Remove dot
+                ukuranFile: file.size,
+                urlFile: file.path.replace(/\\/g, '/'), // Normalize path for Windows
+                kategori: data.kategori as KategoriDokumen,
+                deskripsi: data.deskripsi,
+                tags: data.tags,
+                isPublik: data.isPublik === true,
                 transaksiId: data.transaksiId,
                 voucherId: data.voucherId,
                 asetTetapId: data.asetTetapId,
-                nama: data.nama,
-                jenisFile: file.mimetype,
-                ukuranFile: file.size,
-                urlFile: `/uploads/${file.filename}`,
-                kategori: data.kategori || 'LAINNYA',
-                deskripsi: data.deskripsi,
                 uploadedById: userId,
-                isPublik: data.isPublik ?? false,
-                tags: data.tags,
             },
         });
 
-        logger.info(`Document uploaded: ${document.id} (${file.originalname})`);
-        return document;
+        return doc;
     }
 
-    // Get documents with filters
-    async getDocuments(filters: GetDocumentsInput) {
-        const where: any = {};
-
-        if (filters.transaksiId) where.transaksiId = filters.transaksiId;
-        if (filters.voucherId) where.voucherId = filters.voucherId;
-        if (filters.asetTetapId) where.asetTetapId = filters.asetTetapId;
-        if (filters.kategori) where.kategori = filters.kategori;
-        if (filters.search) {
-            where.OR = [
-                { nama: { contains: filters.search, mode: 'insensitive' } },
-                { deskripsi: { contains: filters.search, mode: 'insensitive' } },
-                { tags: { contains: filters.search, mode: 'insensitive' } },
-            ];
+    // Get Document List
+    async getDocuments(filters: { transaksiId?: string; voucherId?: string; asetTetapId?: string }) {
+        if (!filters.transaksiId && !filters.voucherId && !filters.asetTetapId) {
+            throw new ValidationError('Filter entity harus diisi');
         }
 
-        const page = filters.page || 1;
-        const limit = filters.limit || 20;
-        const skip = (page - 1) * limit;
-
-        const [data, total] = await Promise.all([
-            prisma.dokumenTransaksi.findMany({
-                where,
-                skip,
-                take: limit,
-                orderBy: { createdAt: 'desc' },
-                include: {
-                    uploadedBy: {
-                        select: {
-                            namaLengkap: true,
-                            email: true,
-                        },
-                    },
-                },
-            }),
-            prisma.dokumenTransaksi.count({ where }),
-        ]);
-
-        return {
-            data,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit),
-            },
-        };
-    }
-
-    // Get single document
-    async getDocument(id: string) {
-        const document = await prisma.dokumenTransaksi.findUnique({
-            where: { id },
+        return await prisma.dokumenTransaksi.findMany({
+            where: filters,
+            orderBy: { createdAt: 'desc' },
             include: {
                 uploadedBy: {
-                    select: {
-                        namaLengkap: true,
-                        email: true,
-                    },
-                },
-                transaksi: {
-                    select: {
-                        nomorTransaksi: true,
-                        tanggal: true,
-                        tipe: true,
-                    },
-                },
-                voucher: {
-                    select: {
-                        nomorVoucher: true,
-                        tanggal: true,
-                        tipe: true,
-                    },
-                },
-                asetTetap: {
-                    select: {
-                        kodeAset: true,
-                        namaAset: true,
-                    },
-                },
-            },
+                    select: { id: true, namaLengkap: true }
+                }
+            }
         });
-
-        if (!document) throw new ValidationError('Dokumen tidak ditemukan');
-        return document;
     }
 
-    // Update document metadata
-    async updateDocument(id: string, data: UpdateDocumentInput) {
-        const existing = await prisma.dokumenTransaksi.findUnique({ where: { id } });
-        if (!existing) throw new ValidationError('Dokumen tidak ditemukan');
+    // Delete Document
+    async deleteDocument(id: string, userId: string) {
+        const doc = await prisma.dokumenTransaksi.findUnique({ where: { id } });
+        if (!doc) throw new ValidationError('Dokumen tidak ditemukan');
 
-        const updated = await prisma.dokumenTransaksi.update({
-            where: { id },
-            data: {
-                nama: data.nama,
-                kategori: data.kategori,
-                deskripsi: data.deskripsi,
-                isPublik: data.isPublik,
-                tags: data.tags,
-            },
-        });
+        // Check permission (Only uploader or Admin)
+        const user = await prisma.pengguna.findUnique({ where: { id: userId } });
+        const isAdmin = ['SUPERADMIN', 'ADMIN'].includes(user?.role || '');
 
-        logger.info(`Document updated: ${id}`);
-        return updated;
-    }
-
-    // Delete document
-    async deleteDocument(id: string) {
-        const document = await prisma.dokumenTransaksi.findUnique({ where: { id } });
-        if (!document) throw new ValidationError('Dokumen tidak ditemukan');
-
-        // Delete physical file
-        try {
-            const filePath = path.join(process.cwd(), document.urlFile);
-            await fs.unlink(filePath);
-            logger.info(`File deleted: ${filePath}`);
-        } catch (error) {
-            logger.warn(`Failed to delete file: ${document.urlFile}`, error);
+        if (doc.uploadedById !== userId && !isAdmin) {
+            throw new AuthenticationError('Anda tidak memiliki akses untuk menghapus dokumen ini');
         }
 
-        // Delete database record
-        await prisma.dokumenTransaksi.delete({ where: { id } });
-        logger.info(`Document deleted: ${id}`);
-
-        return { message: 'Dokumen berhasil dihapus' };
-    }
-
-    // Download document (returns file path)
-    async getDocumentPath(id: string, userId: string) {
-        const document = await prisma.dokumenTransaksi.findUnique({ where: { id } });
-        if (!document) throw new ValidationError('Dokumen tidak ditemukan');
-
-        // Check access rights (public or uploaded by user)
-        if (!document.isPublik && document.uploadedById !== userId) {
-            const user = await prisma.pengguna.findUnique({ where: { id: userId } });
-            // Allow if admin or manager
-            if (!user || !['SUPERADMIN', 'ADMIN', 'MANAGER'].includes(user.role)) {
-                throw new AuthenticationError('Anda tidak memiliki akses ke dokumen ini');
+        // 1. Delete file from disk
+        const filePath = doc.urlFile;
+        if (fs.existsSync(filePath)) {
+            try {
+                fs.unlinkSync(filePath);
+            } catch (err) {
+                console.error('Failed to unlink file:', err);
+                // Continue to delete record even if file deletion fails
             }
         }
 
-        const filePath = path.join(process.cwd(), document.urlFile);
+        // 2. Delete record from DB
+        await prisma.dokumenTransaksi.delete({ where: { id } });
 
-        // Check if file exists
-        try {
-            await fs.access(filePath);
-        } catch {
-            throw new ValidationError('File tidak ditemukan di server');
-        }
-
-        return { document, filePath };
+        return { message: 'Dokumen berhasil dihapus' };
     }
 }
 

@@ -2,12 +2,15 @@ import app from './app';
 import { env } from '@/config/env';
 import logger from '@/utils/logger';
 import prisma from '@/config/database';
+import { initRecurringScheduler } from '@/schedulers/recurring.scheduler';
 
 const startServer = async (): Promise<void> => {
   try {
-    // Test database connection
     await prisma.$connect();
     logger.info('✅ Database connected successfully');
+
+    // Initialize Schedulers
+    initRecurringScheduler();
 
     // Start server
     const server = app.listen(env.PORT, () => {

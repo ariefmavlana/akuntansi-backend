@@ -117,8 +117,15 @@ async function main(): Promise<void> {
       parentId = coaMap.get(account.parentKode);
     }
 
-    const created = await prisma.chartOfAccounts.create({
-      data: {
+    const created = await prisma.chartOfAccounts.upsert({
+      where: {
+        perusahaanId_kodeAkun: {
+          perusahaanId: perusahaan.id,
+          kodeAkun: account.kode,
+        },
+      },
+      update: {},
+      create: {
         perusahaanId: perusahaan.id,
         kodeAkun: account.kode,
         namaAkun: account.nama,
@@ -171,8 +178,15 @@ async function main(): Promise<void> {
   ];
 
   for (const feature of basicFeatures) {
-    await prisma.fiturModul.create({
-      data: {
+    await prisma.fiturModul.upsert({
+      where: {
+        paketId_kodeModul: {
+          paketId: umkmPackage.id,
+          kodeModul: feature.kodeModul,
+        },
+      },
+      update: {},
+      create: {
         paketId: umkmPackage.id,
         kodeModul: feature.kodeModul,
         namaModul: feature.namaModul,
@@ -188,8 +202,16 @@ async function main(): Promise<void> {
   const today = new Date();
   const oneYearLater = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
 
-  await prisma.perusahaanPaket.create({
-    data: {
+  await prisma.perusahaanPaket.upsert({
+    where: {
+      perusahaanId_paketId_tanggalMulai: {
+        perusahaanId: perusahaan.id,
+        paketId: umkmPackage.id,
+        tanggalMulai: today,
+      },
+    },
+    update: {},
+    create: {
       perusahaanId: perusahaan.id,
       paketId: umkmPackage.id,
       tanggalMulai: today,

@@ -39,6 +39,7 @@ export const stockMovementSchema = z.object({
         tipe: z.enum(['MASUK', 'KELUAR', 'PENYESUAIAN']),
         jumlah: z.number().min(0.01),
         harga: z.number().min(0).optional(),
+        gudangId: z.string().cuid().optional(),
         referensi: z.string().optional(),
         keterangan: z.string().optional(),
     }),

@@ -1,118 +1,67 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.dashboardController = exports.DashboardController = void 0;
+exports.DashboardController = void 0;
 const dashboard_service_1 = require("../services/dashboard.service");
+const logger_1 = __importDefault(require("../utils/logger"));
 class DashboardController {
-    // Get Financial KPIs
-    async getKPIs(req, res, next) {
+    // Get Stats
+    static async getStats(req, res) {
         try {
-            const filters = req.query;
-            const kpis = await dashboard_service_1.dashboardService.getFinancialKPIs(filters);
-            return res.json({
-                success: true,
-                data: kpis,
+            const { startDate, endDate } = req.query;
+            const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+            const end = endDate ? new Date(endDate) : new Date();
+            const stats = await dashboard_service_1.dashboardService.getStats(req.user.perusahaanId, start, end);
+            res.json({
+                status: 'success',
+                data: stats
             });
         }
         catch (error) {
-            next(error);
+            logger_1.default.error('Error fetching dashboard stats:', error);
+            res.status(500).json({ status: 'error', message: 'Failed to fetch stats' });
         }
     }
-    // Get Cash Flow Summary
-    async getCashFlow(req, res, next) {
+    // Get User Widgets
+    static async getWidgets(req, res) {
         try {
-            const filters = req.query;
-            const cashFlow = await dashboard_service_1.dashboardService.getCashFlowSummary(filters);
-            return res.json({
-                success: true,
-                data: cashFlow,
+            const widgets = await dashboard_service_1.dashboardService.getUserWidgets(req.user.userId, req.user.perusahaanId);
+            res.json({
+                status: 'success',
+                data: widgets
             });
         }
         catch (error) {
-            next(error);
+            res.status(500).json({ status: 'error', message: error.message });
         }
     }
-    // Get Revenue Analytics
-    async getRevenue(req, res, next) {
+    // Add Widget
+    static async createWidget(req, res) {
         try {
-            const filters = req.query;
-            const revenue = await dashboard_service_1.dashboardService.getRevenueAnalytics(filters);
-            return res.json({
-                success: true,
-                data: revenue.data,
-                meta: {
-                    currency: revenue.currency,
-                },
+            const widget = await dashboard_service_1.dashboardService.createWidget(req.user.userId, req.user.perusahaanId, req.body);
+            res.status(201).json({
+                status: 'success',
+                data: widget
             });
         }
         catch (error) {
-            next(error);
+            res.status(400).json({ status: 'error', message: error.message });
         }
     }
-    // Get Expense Analytics
-    async getExpenses(req, res, next) {
+    // Delete Widget
+    static async deleteWidget(req, res) {
         try {
-            const filters = req.query;
-            const expenses = await dashboard_service_1.dashboardService.getExpenseAnalytics(filters);
-            return res.json({
-                success: true,
-                data: expenses.data,
-                meta: {
-                    currency: expenses.currency,
-                },
+            await dashboard_service_1.dashboardService.deleteWidget(req.params.id, req.user.userId);
+            res.json({
+                status: 'success',
+                message: 'Widget deleted'
             });
         }
         catch (error) {
-            next(error);
-        }
-    }
-    // Get Profitability Metrics
-    async getProfitability(req, res, next) {
-        try {
-            const filters = req.query;
-            const profitability = await dashboard_service_1.dashboardService.getProfitability(filters);
-            return res.json({
-                success: true,
-                data: profitability,
-            });
-        }
-        catch (error) {
-            next(error);
-        }
-    }
-    // Get Account Balance Trend
-    async getBalanceTrend(req, res, next) {
-        try {
-            const filters = req.query;
-            const trend = await dashboard_service_1.dashboardService.getBalanceTrend(filters);
-            return res.json({
-                success: true,
-                data: trend.data,
-                meta: {
-                    currency: trend.currency,
-                },
-            });
-        }
-        catch (error) {
-            next(error);
-        }
-    }
-    // Get Top Accounts by Activity
-    async getTopAccounts(req, res, next) {
-        try {
-            const filters = req.query;
-            const topAccounts = await dashboard_service_1.dashboardService.getTopAccounts(filters);
-            return res.json({
-                success: true,
-                data: topAccounts.data,
-                meta: {
-                    currency: topAccounts.currency,
-                },
-            });
-        }
-        catch (error) {
-            next(error);
+            res.status(400).json({ status: 'error', message: error.message });
         }
     }
 }
 exports.DashboardController = DashboardController;
-exports.dashboardController = new DashboardController();

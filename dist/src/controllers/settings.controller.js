@@ -23,8 +23,7 @@ class SettingsController {
         try {
             const { key } = req.params;
             const { nilai } = req.body;
-            const userId = req.user.id;
-            const result = await settings_service_1.settingsService.updateSetting({ key, nilai }, userId);
+            const result = await settings_service_1.settingsService.updateSetting({ key, nilai }, req.user.userId);
             return res.json({
                 success: true,
                 message: 'Setting berhasil diupdate',
@@ -39,8 +38,7 @@ class SettingsController {
     async bulkUpdate(req, res, next) {
         try {
             const data = req.body;
-            const userId = req.user.id;
-            const result = await settings_service_1.settingsService.bulkUpdateSettings(data, userId);
+            const result = await settings_service_1.settingsService.bulkUpdateSettings(data, req.user.userId);
             return res.json({
                 success: true,
                 message: `Berhasil mengupdate ${result.count} settings`,

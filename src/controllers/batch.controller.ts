@@ -1,5 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { batchService } from '@/services/batch.service';
+import { AuthenticatedRequest } from '@/middlewares/auth.middleware';
 import type {
     BatchTransactionsInput,
     BatchApprovalsInput,
@@ -9,12 +10,10 @@ import type {
 
 export class BatchController {
     // Batch create transactions
-    async batchCreateTransactions(req: Request, res: Response, next: NextFunction) {
+    async batchCreateTransactions(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
             const data = req.body as BatchTransactionsInput;
-            const userId = (req as any).user.id;
-
-            const result = await batchService.processBatchTransactions(data, userId);
+            const result = await batchService.processBatchTransactions(data, req.user!.userId);
 
             return res.status(201).json({
                 success: true,
@@ -27,12 +26,10 @@ export class BatchController {
     }
 
     // Batch process approvals
-    async batchProcessApprovals(req: Request, res: Response, next: NextFunction) {
+    async batchProcessApprovals(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
             const data = req.body as BatchApprovalsInput;
-            const userId = (req as any).user.id;
-
-            const result = await batchService.processBatchApprovals(data, userId);
+            const result = await batchService.processBatchApprovals(data, req.user!.userId);
 
             return res.json({
                 success: true,
@@ -45,12 +42,10 @@ export class BatchController {
     }
 
     // Batch post journals
-    async batchPostJournals(req: Request, res: Response, next: NextFunction) {
+    async batchPostJournals(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
             const data = req.body as BatchPostJournalsInput;
-            const userId = (req as any).user.id;
-
-            const result = await batchService.processBatchJournalPosting(data, userId);
+            const result = await batchService.processBatchJournalPosting(data, req.user!.userId);
 
             return res.json({
                 success: true,
@@ -63,12 +58,10 @@ export class BatchController {
     }
 
     // Batch delete
-    async batchDelete(req: Request, res: Response, next: NextFunction) {
+    async batchDelete(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
             const data = req.body as BatchDeleteInput;
-            const userId = (req as any).user.id;
-
-            const result = await batchService.processBatchDelete(data, userId);
+            const result = await batchService.processBatchDelete(data, req.user!.userId);
 
             return res.json({
                 success: true,

@@ -4,6 +4,7 @@ const client_1 = require("@prisma/client");
 const env_1 = require("./env");
 const prismaClientSingleton = () => {
     return new client_1.PrismaClient({
+        datasourceUrl: env_1.env.DATABASE_URL,
         log: env_1.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
         errorFormat: 'pretty',
     });

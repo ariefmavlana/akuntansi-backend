@@ -1,222 +1,157 @@
 import prisma from '@/config/database';
 import logger from '@/utils/logger';
-import { ValidationError } from './auth.service';
-import type {
-    GetAuditLogsInput,
-    GetAuditByRecordInput,
-    GetUserActivityInput,
-} from '@/validators/audit.validator';
+
+export interface AuditLogInput {
+    perusahaanId: string;
+    penggunaId?: string;
+    aksi: string; // CREATE, UPDATE, DELETE, LOGIN, etc.
+    modul: string;
+    subModul?: string;
+    namaTabel: string;
+    idData: string;
+    dataSebelum?: any;
+    dataSesudah?: any;
+    ipAddress?: string;
+    userAgent?: string;
+    keterangan?: string;
+}
 
 export class AuditService {
-    // Create audit log (called internally by other services)
-    async createAuditLog(data: {
-        perusahaanId: string;
-        penggunaId?: string;
-        aksi: string;
-        modul: string;
-        subModul?: string;
-        namaTabel: string;
-        idData: string;
-        dataSebelum?: any;
-        dataSesudah?: any;
-        perubahan?: any;
-        ipAddress?: string;
-        userAgent?: string;
-        lokasi?: string;
-        keterangan?: string;
-    }) {
-        const auditLog = await prisma.jejakAudit.create({
-            data: {
-                perusahaanId: data.perusahaanId,
-                penggunaId: data.penggunaId,
-                aksi: data.aksi,
-                modul: data.modul,
-                subModul: data.subModul,
-                namaTabel: data.namaTabel,
-                idData: data.idData,
-                dataSebelum: data.dataSebelum || null,
-                dataSesudah: data.dataSesudah || null,
-                perubahan: data.perubahan || null,
-                ipAddress: data.ipAddress,
-                userAgent: data.userAgent,
-                lokasi: data.lokasi,
-                keterangan: data.keterangan,
-            },
-        });
+    /**
+     * Log user activity to JejakAudit table.
+     * designed to be "fire and forget" or awaited depending on critical nature.
+     */
+    async logActivity(data: AuditLogInput) {
+        try {
+            // Calculate diff if both before and after exist
+            let perubahan: any = null;
+            if (data.dataSebelum && data.dataSesudah) {
+                perubahan = this.calculateDiff(data.dataSebelum, data.dataSesudah);
+            }
 
-        logger.info(`Audit log created: ${data.aksi} on ${data.namaTabel}:${data.idData}`);
-        return auditLog;
+            // Create log
+            await prisma.jejakAudit.create({
+                data: {
+                    perusahaanId: data.perusahaanId,
+                    penggunaId: data.penggunaId,
+                    aksi: data.aksi,
+                    modul: data.modul,
+                    subModul: data.subModul,
+                    namaTabel: data.namaTabel,
+                    idData: data.idData,
+                    dataSebelum: data.dataSebelum ?? undefined,
+                    dataSesudah: data.dataSesudah ?? undefined,
+                    perubahan: perubahan ?? undefined,
+                    ipAddress: data.ipAddress,
+                    userAgent: data.userAgent,
+                    keterangan: data.keterangan
+                }
+            });
+
+            // Do not log success to console to stay quiet, only errors
+        } catch (error) {
+            // Fallback: Just log to file system if DB logging fails
+            logger.error('Failed to write Audit Log:', error);
+            logger.error('Audit Data:', JSON.stringify(data));
+        }
     }
 
-    // Get audit logs with comprehensive filtering
-    async getAuditLogs(filters: GetAuditLogsInput) {
-        const where: any = { perusahaanId: filters.perusahaanId };
-
-        if (filters.penggunaId) where.penggunaId = filters.penggunaId;
-        if (filters.modul) where.modul = filters.modul;
-        if (filters.subModul) where.subModul = filters.subModul;
-        if (filters.aksi) where.aksi = filters.aksi;
-        if (filters.namaTabel) where.namaTabel = filters.namaTabel;
-        if (filters.idData) where.idData = filters.idData;
-
-        if (filters.startDate || filters.endDate) {
-            where.createdAt = {};
-            if (filters.startDate) where.createdAt.gte = new Date(filters.startDate);
-            if (filters.endDate) where.createdAt.lte = new Date(filters.endDate);
-        }
-
-        const page = filters.page || 1;
-        const limit = filters.limit || 50;
+    /**
+     * Get Audit Logs with pagination and filters
+     */
+    async getAuditLogs(perusahaanId: string, params: {
+        page?: number;
+        limit?: number;
+        module?: string;
+        action?: string;
+        userName?: string;
+        startDate?: Date;
+        endDate?: Date;
+    }) {
+        const page = Number(params.page) || 1;
+        const limit = Number(params.limit) || 20;
         const skip = (page - 1) * limit;
 
-        const [data, total] = await Promise.all([
+        const where: any = { perusahaanId };
+
+        if (params.module) where.modul = params.module;
+        if (params.action) where.aksi = params.action;
+        if (params.userName) {
+            where.pengguna = { namaLengkap: { contains: params.userName, mode: 'insensitive' } };
+        }
+        if (params.startDate && params.endDate) {
+            where.createdAt = { gte: params.startDate, lte: params.endDate };
+        }
+
+        const [total, logs] = await Promise.all([
+            prisma.jejakAudit.count({ where }),
             prisma.jejakAudit.findMany({
                 where,
                 skip,
                 take: limit,
                 orderBy: { createdAt: 'desc' },
-                include: {
-                    pengguna: {
-                        select: {
-                            namaLengkap: true,
-                            email: true,
-                            role: true,
-                        },
-                    },
-                },
-            }),
-            prisma.jejakAudit.count({ where }),
+                include: { pengguna: { select: { namaLengkap: true, email: true } } }
+            })
         ]);
-
-        return {
-            data,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit),
-            },
-        };
-    }
-
-    // Get single audit log
-    async getAuditLog(id: string) {
-        const auditLog = await prisma.jejakAudit.findUnique({
-            where: { id },
-            include: {
-                pengguna: {
-                    select: {
-                        namaLengkap: true,
-                        email: true,
-                        role: true,
-                    },
-                },
-            },
-        });
-
-        if (!auditLog) throw new ValidationError('Audit log tidak ditemukan');
-        return auditLog;
-    }
-
-    // Get audit logs for a specific record (history tracking)
-    async getAuditByRecord(filters: GetAuditByRecordInput) {
-        const logs = await prisma.jejakAudit.findMany({
-            where: {
-                namaTabel: filters.namaTabel,
-                idData: filters.idData,
-            },
-            orderBy: { createdAt: 'desc' },
-            include: {
-                pengguna: {
-                    select: {
-                        namaLengkap: true,
-                        email: true,
-                        role: true,
-                    },
-                },
-            },
-        });
 
         return {
             data: logs,
-            total: logs.length,
-        };
-    }
-
-    // Get user activity timeline
-    async getUserActivity(params: GetUserActivityInput) {
-        const where: any = { penggunaId: params.userId };
-
-        if (params.startDate || params.endDate) {
-            where.createdAt = {};
-            if (params.startDate) where.createdAt.gte = new Date(params.startDate);
-            if (params.endDate) where.createdAt.lte = new Date(params.endDate);
-        }
-
-        const page = params.page || 1;
-        const limit = params.limit || 50;
-        const skip = (page - 1) * limit;
-
-        const [data, total] = await Promise.all([
-            prisma.jejakAudit.findMany({
-                where,
-                skip,
-                take: limit,
-                orderBy: { createdAt: 'desc' },
-            }),
-            prisma.jejakAudit.count({ where }),
-        ]);
-
-        // Calculate activity statistics
-        const stats = await prisma.jejakAudit.groupBy({
-            by: ['aksi'],
-            where,
-            _count: {
-                aksi: true,
-            },
-        });
-
-        return {
-            data,
-            pagination: {
+            meta: {
+                total,
                 page,
                 limit,
-                total,
-                totalPages: Math.ceil(total / limit),
-            },
-            statistics: {
-                totalActions: total,
-                byAction: stats.reduce((acc, stat) => {
-                    acc[stat.aksi] = stat._count.aksi;
-                    return acc;
-                }, {} as Record<string, number>),
-            },
+                totalPages: Math.ceil(total / limit)
+            }
         };
     }
 
-    // Helper: Calculate diff between two objects
-    calculateDiff(before: any, after: any): any {
+    /**
+     * Get Single Audit Log
+     */
+    async getAuditLog(id: string) {
+        return prisma.jejakAudit.findUnique({
+            where: { id },
+            include: { pengguna: { select: { namaLengkap: true, email: true } } }
+        });
+    }
+
+    /**
+     * Get Audit Logs for specific record
+     */
+    async getAuditByRecord(perusahaanId: string, table: string, idData: string) {
+        return prisma.jejakAudit.findMany({
+            where: { perusahaanId, namaTabel: table, idData },
+            orderBy: { createdAt: 'desc' },
+            include: { pengguna: { select: { namaLengkap: true } } }
+        });
+    }
+
+    /**
+     * Get User Activity
+     */
+    async getUserActivity(userId: string, limit = 10) {
+        return prisma.jejakAudit.findMany({
+            where: { penggunaId: userId },
+            orderBy: { createdAt: 'desc' },
+            take: limit
+        });
+    }
+
+    private calculateDiff(obj1: any, obj2: any) {
+        // Simple shallow diff for now
+        // In real world, use 'deep-diff' library or recursions
         const diff: any = {};
+        const allKeys = new Set([...Object.keys(obj1), ...Object.keys(obj2)]);
 
-        // Get all unique keys
-        const allKeys = new Set([
-            ...Object.keys(before || {}),
-            ...Object.keys(after || {}),
-        ]);
-
-        allKeys.forEach((key) => {
-            const beforeValue = before?.[key];
-            const afterValue = after?.[key];
-
-            if (JSON.stringify(beforeValue) !== JSON.stringify(afterValue)) {
+        allKeys.forEach(key => {
+            if (JSON.stringify(obj1[key]) !== JSON.stringify(obj2[key])) {
                 diff[key] = {
-                    from: beforeValue,
-                    to: afterValue,
+                    old: obj1[key],
+                    new: obj2[key]
                 };
             }
         });
-
-        return diff;
+        return Object.keys(diff).length > 0 ? diff : null;
     }
 }
 

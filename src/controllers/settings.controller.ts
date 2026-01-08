@@ -1,15 +1,15 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { settingsService } from '@/services/settings.service';
+import { AuthenticatedRequest } from '@/middlewares/auth.middleware';
 import type {
     GetSettingsInput,
-    UpdateSettingInput,
     BulkUpdateSettingsInput,
     ResetSettingsInput,
 } from '@/validators/settings.validator';
 
 export class SettingsController {
     // Get all settings
-    async getAll(req: Request, res: Response, next: NextFunction) {
+    async getAll(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
             const filters = req.query as unknown as GetSettingsInput;
             const result = await settingsService.getSettings(filters);
@@ -25,13 +25,12 @@ export class SettingsController {
     }
 
     // Update single setting
-    async update(req: Request, res: Response, next: NextFunction) {
+    async update(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
             const { key } = req.params;
             const { nilai } = req.body;
-            const userId = (req as any).user.id;
 
-            const result = await settingsService.updateSetting({ key, nilai }, userId);
+            const result = await settingsService.updateSetting({ key, nilai }, req.user!.userId);
 
             return res.json({
                 success: true,
@@ -44,12 +43,11 @@ export class SettingsController {
     }
 
     // Bulk update settings
-    async bulkUpdate(req: Request, res: Response, next: NextFunction) {
+    async bulkUpdate(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
             const data = req.body as BulkUpdateSettingsInput;
-            const userId = (req as any).user.id;
 
-            const result = await settingsService.bulkUpdateSettings(data, userId);
+            const result = await settingsService.bulkUpdateSettings(data, req.user!.userId);
 
             return res.json({
                 success: true,
@@ -62,7 +60,7 @@ export class SettingsController {
     }
 
     // Reset to defaults
-    async reset(req: Request, res: Response, next: NextFunction) {
+    async reset(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
             const filters = req.query as unknown as ResetSettingsInput;
             const result = await settingsService.resetToDefaults(filters);

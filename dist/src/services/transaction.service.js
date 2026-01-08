@@ -8,6 +8,7 @@ const database_1 = __importDefault(require("../config/database"));
 const logger_1 = __importDefault(require("../utils/logger"));
 const client_1 = require("@prisma/client");
 const auth_service_1 = require("./auth.service");
+const journal_service_1 = require("./journal.service");
 /**
  * Transaction Service
  * Handles transaction management with double-entry bookkeeping
@@ -460,9 +461,8 @@ class TransactionService {
             if (transaction.isVoid) {
                 throw new auth_service_1.ValidationError('Transaksi yang sudah divoid tidak dapat diposting');
             }
-            // TODO: Create journal entries from transaction details
-            // This would involve creating JurnalUmum and JurnalDetail records
-            // based on the transaction type and details
+            // Create journal entries automatically
+            await journal_service_1.journalService.createFromTransaction(transactionId, requestingUserId);
             // Update transaction as posted
             const postedTransaction = await database_1.default.transaksi.update({
                 where: { id: transactionId },

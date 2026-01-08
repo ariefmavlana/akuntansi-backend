@@ -39,6 +39,7 @@ exports.stockMovementSchema = zod_1.z.object({
         tipe: zod_1.z.enum(['MASUK', 'KELUAR', 'PENYESUAIAN']),
         jumlah: zod_1.z.number().min(0.01),
         harga: zod_1.z.number().min(0).optional(),
+        gudangId: zod_1.z.string().cuid().optional(),
         referensi: zod_1.z.string().optional(),
         keterangan: zod_1.z.string().optional(),
     }),

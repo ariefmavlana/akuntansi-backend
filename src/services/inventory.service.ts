@@ -85,13 +85,137 @@ export class InventoryService {
                 throw new ValidationError('Inventory tidak ditemukan');
             }
 
-            // For now, log the movement (full implementation would use MutasiPersediaan model)
-            logger.info(`Stock movement: ${data.tipe} - ${data.jumlah} for ${inventory.kodePersediaan}`);
+            // 1. Resolve Warehouse (Gudang)
+            let gudangId = data.gudangId;
+            if (!gudangId) {
+                // Find default warehouse for the company (via first branch)
+                const defaultWarehouse = await prisma.gudang.findFirst({
+                    where: { cabang: { perusahaanId: requestingUser.perusahaanId } }
+                });
+
+                if (defaultWarehouse) {
+                    gudangId = defaultWarehouse.id;
+                } else {
+                    // Create default branch & warehouse if absolutely none exist (auto-setup)
+                    // Simplified: Throw error for now to enforce setup, or create simple one.
+                    // Better to create a default one for smoother UX.
+                    const mainBranch = await prisma.cabang.findFirst({
+                        where: { perusahaanId: requestingUser.perusahaanId }
+                    });
+
+                    let branchId = mainBranch?.id;
+                    if (!branchId) {
+                        const newBranch = await prisma.cabang.create({
+                            data: {
+                                perusahaanId: requestingUser.perusahaanId,
+                                nama: 'Kantor Pusat (Default)',
+                                kode: 'HQ',
+                                alamat: 'Default Address'
+                            }
+                        });
+                        branchId = newBranch.id;
+                    }
+
+                    const newWarehouse = await prisma.gudang.create({
+                        data: {
+                            cabangId: branchId,
+                            nama: 'Gudang Utama',
+                            kode: 'WH-MAIN'
+                        }
+                    });
+                    gudangId = newWarehouse.id;
+                }
+            }
+
+            // 2. Get/Create Stock Record
+            let stockRecord = await prisma.stokPersediaan.findUnique({
+                where: {
+                    persediaanId_gudangId: {
+                        persediaanId: inventory.id,
+                        gudangId: gudangId
+                    }
+                }
+            });
+
+            if (!stockRecord) {
+                stockRecord = await prisma.stokPersediaan.create({
+                    data: {
+                        persediaanId: inventory.id,
+                        gudangId: gudangId,
+                        kuantitas: 0,
+                        hargaRataRata: inventory.hargaBeli, // Init with master price
+                        nilaiStok: 0
+                    }
+                });
+            }
+
+            // 3. Process Movement
+            let newQty = Number(stockRecord.kuantitas);
+            let newAvgCost = Number(stockRecord.hargaRataRata);
+
+            const movementQty = data.jumlah;
+            const inputPrice = data.harga ? data.harga : newAvgCost;
+
+            if (data.tipe === 'MASUK' || data.tipe === 'PENYESUAIAN') {
+                // Calculate Average Cost (Weighted Average)
+                const currentVal = newQty * newAvgCost;
+                const incomingVal = movementQty * inputPrice;
+
+                newQty += movementQty;
+                if (newQty > 0) {
+                    newAvgCost = (currentVal + incomingVal) / newQty;
+                }
+            } else if (data.tipe === 'KELUAR') {
+                if (newQty < movementQty) {
+                    throw new ValidationError(`Stok tidak mencukupi. Tersedia: ${newQty}, Diminta: ${movementQty}`);
+                }
+                newQty -= movementQty;
+                // Avg Cost doesn't change on OUT
+            }
+
+            // 4. Update Stock
+            const updatedStock = await prisma.stokPersediaan.update({
+                where: { id: stockRecord.id },
+                data: {
+                    kuantitas: newQty,
+                    hargaRataRata: newAvgCost,
+                    nilaiStok: newQty * newAvgCost
+                }
+            });
+
+            // Update Master Data cache (optional, but good for quick view)
+            await prisma.persediaan.update({
+                where: { id: inventory.id },
+                data: {
+                    hargaBeli: newAvgCost // Sync master price to latest avg
+                }
+            });
+
+            // 5. Create Mutation Record (Usage history)
+            const mutasi = await prisma.mutasiPersediaan.create({
+                data: {
+                    persediaanId: inventory.id,
+                    gudangId: gudangId,
+                    nomorMutasi: `MUT-${Date.now()}`, // Simple ID
+                    tanggal: new Date(),
+                    tipe: data.tipe,
+                    kuantitas: movementQty,
+                    harga: inputPrice,
+                    nilai: movementQty * inputPrice,
+                    saldoSebelum: stockRecord.kuantitas,
+                    saldoSesudah: newQty,
+                    keterangan: data.keterangan || '-',
+                    referensi: data.referensi
+                }
+            });
+
+            logger.info(`Stock movement recorded: ${data.tipe} ${movementQty} for ${inventory.kodePersediaan} at Gudang ${gudangId}`);
 
             return {
-                message: 'Stock movement recorded',
-                inventory,
-                movement: data,
+                message: 'Stock movement recorded successfully',
+                inventory: { ...inventory, stok: newQty, hargaRataRata: newAvgCost },
+                stockRecord: updatedStock,
+                mutasiData: mutasi
             };
         } catch (error) {
             logger.error('Record stock movement error:', error);

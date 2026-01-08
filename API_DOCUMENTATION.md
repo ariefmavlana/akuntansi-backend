@@ -1,744 +1,264 @@
-# 📚 API Documentation - Backend Akuntansi Indonesia
+# 📚 Dokumentasi API - Backend Akuntansi Indonesia
 
 **Base URL:** `http://localhost:5000/api/v1`  
-**Version:** 1.0.0  
-**Total Endpoints:** 157  
-**Modules:** 24  
-**Status:** ✅ Production Ready  
-**Last Updated:** 8 Januari 2026
+**Versi:** 1.0.0  
+**Total Endpoints:** 172  
+**Modul:** 27  
+**Status:** ✅ Siap Produksi  
+**Terakhir Diupdate:** 9 Januari 2026
 
 ---
 
-## 🔐 Authentication
+## 🔐 Autentikasi
 
-All endpoints (except `/auth/register` and `/auth/login`) require authentication via JWT Bearer token.
+Semua endpoint (kecuali `/auth/register` dan `/auth/login`) memerlukan autentikasi menggunakan token JWT Bearer.
 
-**Header Format:**
+**Format Header:**
 ```
-Authorization: Bearer <your_access_token>
+Authorization: Bearer <token_akses_kamu>
 ```
 
 ---
 
-## 📋 Table of Contents
+## 📋 Daftar Isi
 
-### Core Modules
-1. [Authentication](#authentication-endpoints) - 4 endpoints
-2. [Users](#user-management-endpoints) - 5 endpoints
-3. [Companies](#company-management-endpoints) - 6 endpoints
-4. [Chart of Accounts](#chart-of-accounts-endpoints) - 8 endpoints
-5. [Transactions](#transaction-endpoints) - 10 endpoints
-6. [Vouchers](#voucher-endpoints) - 8 endpoints
-7. [Journals](#journal-endpoints) - 7 endpoints
-8. [Customers](#customer-endpoints) - 6 endpoints
-9. [Suppliers](#supplier-endpoints) - 6 endpoints
-10. [Payments](#payment-endpoints) - 8 endpoints
-11. [Inventory](#inventory-endpoints) - 9 endpoints
-12. [Fixed Assets](#fixed-asset-endpoints) - 8 endpoints
-13. [Taxes](#tax-endpoints) - 6 endpoints
-14. [Reports](#report-endpoints) - 5 endpoints
-15. [Budgets](#budget-endpoints) - 7 endpoints
-16. [Cost Centers](#cost-center-endpoints) - 5 endpoints
-17. [Profit Centers](#profit-center-endpoints) - 5 endpoints
-18. [Approvals](#approval-endpoints) - 6 endpoints
+### Modul Inti (Core)
+1. [Autentikasi (Authentication)](#1-autentikasi) - 4 endpoints
+2. [Pengguna (Users)](#2-pengguna-users) - 5 endpoints
+3. [Perusahaan (Companies)](#3-perusahaan-companies) - 6 endpoints
+4. [Bagan Akun (COA)](#4-bagan-akun-coa) - 8 endpoints
+5. [Transaksi (Transactions)](#5-transaksi-transactions) - 10 endpoints
+6. [Voucher](#6-voucher) - 8 endpoints
+7. [Jurnal (Journals)](#7-jurnal-journals) - 7 endpoints
+8. [Pelanggan (Customers)](#8-pelanggan-customers) - 6 endpoints
+9. [Pemasok (Suppliers)](#9-pemasok-suppliers) - 6 endpoints
+10. [Pembayaran (Payments)](#10-pembayaran-payments) - 8 endpoints
+11. [Inventaris (Inventory)](#11-inventaris-inventory) - 9 endpoints
+12. [Aset Tetap (Fixed Assets)](#12-aset-tetap-fixed-assets) - 8 endpoints
+13. [Pajak (Taxes)](#13-pajak-taxes) - 6 endpoints
+14. [Laporan (Reports)](#14-laporan-reports) - 5 endpoints
+15. [Anggaran (Budgets)](#15-anggaran-budgets) - 7 endpoints
+16. [Pusat Biaya (Cost Centers)](#16-pusat-biaya-cost-centers) - 5 endpoints
+17. [Pusat Laba (Profit Centers)](#17-pusat-laba-profit-centers) - 5 endpoints
+18. [Persetujuan (Approvals)](#18-persetujuan-approvals) - 6 endpoints
 
-### Advanced Modules
-19. [Recurring Transactions](#recurring-endpoints) - 8 endpoints
-20. [Documents](#document-endpoints) - 5 endpoints
-21. [Audit Trail](#audit-endpoints) - 4 endpoints
-22. [Dashboard & Analytics](#dashboard-endpoints) - 7 endpoints
-23. [Batch Operations](#batch-endpoints) - 4 endpoints
-24. [Settings](#settings-endpoints) - 4 endpoints
-
-### Reference
-- [Error Codes](#error-codes)
-- [Response Format](#response-format)
-- [Rate Limiting](#rate-limiting)
-- [Testing Guide](#testing-with-curl)
-
-**Total: 157 Endpoints across 24 Modules**
+### Modul Lanjutan (Advanced)
+19. [Transaksi Berulang (Recurring)](#19-transaksi-berulang-recurring) - 8 endpoints
+20. [Dokumen (Documents)](#20-dokumen-documents) - 5 endpoints
+21. [Jejak Audit (Audit Trail)](#21-jejak-audit-audit-trail) - 4 endpoints
+22. [Dashboard](#22-dashboard) - 7 endpoints
+23. [Operasi Batch](#23-operasi-batch) - 4 endpoints
+24. [Pengaturan (Settings)](#24-pengaturan-settings) - 4 endpoints
+25. [Karyawan (Employees)](#25-karyawan-employees) - 5 endpoints
+26. [Kontrak (Contracts)](#26-kontrak-contracts) - 5 endpoints
+27. [Penggajian (Payrolls)](#27-penggajian-payrolls) - 5 endpoints
 
 ---
 
-## Authentication Endpoints
+### Referensi
+- [Kode Error](#kode-error)
+- [Format Respon](#format-respon)
 
-### 1. Register User
-**POST** `/auth/register`
+---
 
-**Request Body:**
-```json
-{
-  "username": "string (required)",
-  "email": "string (required, email format)",
-  "password": "string (required, min 8 chars, must contain uppercase, lowercase, number)",
-  "namaLengkap": "string (required)",
-  "perusahaanId": "string (required, cuid)",
-  "cabangId": "string (optional, cuid)",
-  "telepon": "string (optional)"
-}
-```
+## 1. Autentikasi
 
-**Response (201):**
+### Register User
+`POST /auth/register`
+Mendaftarkan user baru dan perusahaan baru.
+
+### Login
+`POST /auth/login`
+Masuk ke aplikasi untuk mendapatkan Token.
+
+### Refresh Token
+`POST /auth/refresh`
+Perpanjang sesi login.
+
+### Get Current User
+`GET /auth/me`
+Lihat profil user yang sedang login.
+
+---
+
+## 2. Pengguna (Users)
+
+### List Users
+`GET /users`
+Lihat daftar semua user.
+
+### Get User Detail
+`GET /users/:id`
+
+### Create User
+`POST /users` (Admin only)
+
+### Update User
+`PUT /users/:id`
+
+### Delete User
+`DELETE /users/:id`
+
+---
+
+## 3. Perusahaan (Companies)
+
+### List Companies
+`GET /companies`
+
+### Create Company
+`POST /companies`
+
+### Get Company Detail
+`GET /companies/:id`
+
+### Update Company
+`PUT /companies/:id`
+
+### Delete Company
+`DELETE /companies/:id`
+
+### Manage Branches
+`GET /companies/:id/branches` (Lihat Cabang)
+
+---
+
+## 4. Bagan Akun (COA)
+
+### List Accounts
+`GET /coa`
+Lihat semua akun akuntansi.
+
+### Create Account
+`POST /coa`
+Tambah akun baru.
+
+### Get Account Hierarchy
+`GET /coa/hierarchy`
+Lihat akun dalam bentuk pohon (Induk -> Anak).
+
+---
+
+## 5. Transaksi (Transactions)
+
+### Create Transaction
+`POST /transactions`
+Catat transaksi baru (Penjualan/Pembelian/Biaya).
+
+### List Transactions
+`GET /transactions`
+Lihat riwayat transaksi.
+
+### Post Transaction
+`POST /transactions/:id/post`
+Posting transaksi ke buku besar (Finalisasi).
+
+---
+
+## 19. Transaksi Berulang (Recurring)
+
+### Buat Jadwal
+`POST /recurring`
+Bikin jadwal tagihan otomatis.
+
+### Lihat Jadwal
+`GET /recurring`
+
+### Jalankan Manual
+`POST /recurring/:id/process`
+Paksa jalankan transaksi sekarang.
+
+---
+
+## 20. Dokumen (Documents)
+
+### Upload Dokumen
+`POST /documents`
+Upload bukti potong/bon/faktur.
+
+### Download Dokumen
+`GET /documents/:id`
+
+---
+
+## 21. Jejak Audit (Audit Trail)
+
+### Lihat Log
+`GET /audit`
+Cek siapa melakukan apa.
+
+### Lihat Timeline
+`GET /audit/timeline/:recordId`
+Riwayat perubahan pada satu data spesifik.
+
+---
+
+## 22. Dashboard
+
+### Statistik Keuangan
+`GET /dashboard/stats`
+Dapat data Profit, Revenue, Expense hari ini.
+
+### Widget
+`GET /dashboard/widgets`
+Ambil konfigurasi widget user.
+
+---
+
+## 23. Operasi Batch
+
+### Upload Transaksi Massal
+`POST /batch/transactions`
+Kirim banyak transaksi sekaligus.
+
+### Posting Massal
+`POST /batch/post-journals`
+Posting semua jurnal dalam satu periode.
+
+---
+
+## 24. Pengaturan (Settings)
+
+### Lihat Pengaturan
+`GET /settings`
+
+### Ubah Pengaturan
+`PUT /settings/:key`
+
+---
+
+## Kode Error
+
+| Kode | Arti |
+|------|------|
+| 200 | Sukses |
+| 400 | Data input salah (Bad Request) |
+| 401 | Belum login (Unauthorized) |
+| 403 | Tidak punya izin (Forbidden) |
+| 404 | Data tidak ditemukan |
+| 500 | Error Server |
+
+## Format Respon
+
+Semua respon API mengikuti standar ini:
+
+**Sukses:**
 ```json
 {
   "success": true,
-  "data": {
-    "user": {
-      "id": "clxxx...",
-      "username": "testuser",
-      "email": "test@example.com",
-      "namaLengkap": "Test User",
-      "role": "STAFF",
-      "isAktif": true
-    },
-    "tokens": {
-      "accessToken": "eyJhbGc...",
-      "refreshToken": "eyJhbGc..."
-    }
-  },
-  "message": "Registrasi berhasil"
+  "data": { ... },
+  "message": "Berhasil",
+  "meta": { "page": 1, "limit": 10 }
 }
 ```
 
-### 2. Login
-**POST** `/auth/login`
-
-**Request Body:**
-```json
-{
-  "emailOrUsername": "string (required)",
-  "password": "string (required)"
-}
-```
-
-**Response (200):**
-```json
-{
-  "success": true,
-  "data": {
-    "user": { /* user object */ },
-    "tokens": {
-      "accessToken": "eyJhbGc...",
-      "refreshToken": "eyJhbGc..."
-    }
-  },
-  "message": "Login berhasil"
-}
-```
-
-### 3. Refresh Token
-**POST** `/auth/refresh`
-
-**Request Body:**
-```json
-{
-  "refreshToken": "string (required)"
-}
-```
-
-### 4. Get Current User
-**GET** `/auth/me`
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response (200):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "clxxx...",
-    "username": "admin",
-    "email": "admin@akuntansi.id",
-    "namaLengkap": "Administrator",
-    "role": "SUPERADMIN",
-    "perusahaan": {
-      "id": "clxxx...",
-      "kode": "DEMO",
-      "nama": "PT Demo Akuntansi"
-    },
-    "cabang": null
-  },
-  "message": "Data user berhasil diambil"
-}
-```
-
-### 5. Change Password
-**POST** `/auth/change-password`
-
-**Request Body:**
-```json
-{
-  "currentPassword": "string (required)",
-  "newPassword": "string (required, min 8 chars)"
-}
-```
-
-### 6. Logout
-**POST** `/auth/logout`
-
----
-
-## User Management Endpoints
-
-### 1. List Users
-**GET** `/users`
-
-**Query Parameters:**
-- `page` (optional, default: 1)
-- `limit` (optional, default: 10)
-- `search` (optional)
-- `role` (optional)
-- `isAktif` (optional, boolean)
-- `perusahaanId` (optional)
-
-**Response (200):**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "clxxx...",
-      "username": "user1",
-      "email": "user1@example.com",
-      "namaLengkap": "User One",
-      "role": "STAFF",
-      "isAktif": true,
-      "createdAt": "2026-01-07T10:00:00Z"
-    }
-  ],
-  "message": "Data user berhasil diambil",
-  "meta": {
-    "page": 1,
-    "limit": 10,
-    "total": 25,
-    "totalPages": 3
-  }
-}
-```
-
-### 2. Get User by ID
-**GET** `/users/:id`
-
-### 3. Update User
-**PUT** `/users/:id`
-
-**Request Body:**
-```json
-{
-  "namaLengkap": "string (optional)",
-  "telepon": "string (optional)",
-  "foto": "string (optional, URL)"
-}
-```
-
-### 4. Update User Role
-**PUT** `/users/:id/role`
-
-**Access:** ADMIN, SUPERADMIN
-
-**Request Body:**
-```json
-{
-  "role": "ACCOUNTANT" // enum: SUPERADMIN, ADMIN, MANAGER, STAFF, etc.
-}
-```
-
-### 5. Activate/Deactivate User
-**PUT** `/users/:id/activate`  
-**PUT** `/users/:id/deactivate`
-
-### 6. Delete User
-**DELETE** `/users/:id`
-
----
-
-## Company Management Endpoints
-
-### 1. Create Company
-**POST** `/companies`
-
-**Access:** SUPERADMIN only
-
-**Request Body:**
-```json
-{
-  "kode": "string (required, 2-10 chars, uppercase + numbers)",
-  "nama": "string (required)",
-  "namaLengkap": "string (optional)",
-  "bentukUsaha": "string (optional)",
-  "bidangUsaha": "string (optional)",
-  "alamat": "string (optional)",
-  "kota": "string (optional)",
-  "provinsi": "string (optional)",
-  "telepon": "string (optional)",
-  "email": "string (optional, email format)",
-  "npwp": "string (optional, format: XX.XXX.XXX.X-XXX.XXX)",
-  "mataUangUtama": "string (default: IDR)",
-  "tahunBuku": "number (default: 12)"
-}
-```
-
-### 2. List Companies
-**GET** `/companies`
-
-**Query Parameters:**
-- `page`, `limit`
-- `search`
-- `bentukUsaha`
-- `kota`, `provinsi`
-
-### 3. Get Company
-**GET** `/companies/:id`
-
-**Response includes:**
-- Parent company (if any)
-- Child companies
-- Branches
-- User count, COA count, Transaction count
-
-### 4. Update Company
-**PUT** `/companies/:id`
-
-**Access:** SUPERADMIN or own company ADMIN
-
-### 5. Delete Company
-**DELETE** `/companies/:id`
-
-**Access:** SUPERADMIN only
-
-### Branch Endpoints
-
-**POST** `/companies/branches` - Create branch  
-**GET** `/companies/branches` - List branches  
-**GET** `/companies/branches/:id` - Get branch  
-**PUT** `/companies/branches/:id` - Update branch  
-**DELETE** `/companies/branches/:id` - Delete branch
-
----
-
-## Chart of Accounts Endpoints
-
-### 1. Create Account
-**POST** `/coa`
-
-**Access:** ACCOUNTANT, SENIOR_ACCOUNTANT, ADMIN, SUPERADMIN
-
-**Request Body:**
-```json
-{
-  "perusahaanId": "string (required)",
-  "kodeAkun": "string (required, e.g., '1-1000')",
-  "namaAkun": "string (required)",
-  "tipe": "ASET | LIABILITAS | EKUITAS | PENDAPATAN | BEBAN",
-  "kategoriAset": "ASET_LANCAR | ASET_TETAP | ... (if tipe=ASET)",
-  "level": "number (default: 1)",
-  "parentId": "string (optional)",
-  "normalBalance": "DEBIT | KREDIT (default: DEBIT)",
-  "isHeader": "boolean (default: false)",
-  "isActive": "boolean (default: true)",
-  "allowManualEntry": "boolean (default: true)",
-  "saldoAwal": "number (default: 0)"
-}
-```
-
-**Response (201):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "clxxx...",
-    "kodeAkun": "1-1000",
-    "namaAkun": "Kas",
-    "tipe": "ASET",
-    "kategoriAset": "ASET_LANCAR",
-    "level": 1,
-    "normalBalance": "DEBIT",
-    "isHeader": false,
-    "isActive": true,
-    "saldoBerjalan": 0
-  },
-  "message": "Akun berhasil dibuat"
-}
-```
-
-### 2. List Accounts
-**GET** `/coa`
-
-**Query Parameters:**
-- `page`, `limit`
-- `search`
-- `tipe` (ASET, LIABILITAS, etc.)
-- `kategoriAset`, `kategoriLiabilitas`, `kategoriEkuitas`
-- `parentId`
-- `level`
-- `isHeader`, `isActive`
-- `normalBalance`
-
-### 3. Get Account Hierarchy
-**GET** `/coa/hierarchy`
-
-**Query Parameters:**
-- `perusahaanId` (required)
-- `tipe` (optional)
-- `includeInactive` (optional, default: false)
-
-**Response (200):**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "clxxx...",
-      "kodeAkun": "1-0000",
-      "namaAkun": "ASET",
-      "isHeader": true,
-      "children": [
-        {
-          "id": "clyyy...",
-          "kodeAkun": "1-1000",
-          "namaAkun": "Kas",
-          "isHeader": false,
-          "children": []
-        }
-      ]
-    }
-  ]
-}
-```
-
-### 4. Get Account
-**GET** `/coa/:id`
-
-### 5. Update Account
-**PUT** `/coa/:id`
-
-### 6. Update Account Balance
-**PUT** `/coa/:id/balance`
-
-**Request Body:**
-```json
-{
-  "saldoAwal": "number (optional)",
-  "saldoAwalDebit": "number (optional)",
-  "saldoAwalKredit": "number (optional)"
-}
-```
-
-### 7. Delete Account
-**DELETE** `/coa/:id`
-
-**Note:** Cannot delete if:
-- Has child accounts
-- Has transactions
-
----
-
-## Transaction Endpoints
-
-### 1. Create Transaction
-**POST** `/transactions`
-
-**Access:** STAFF, ACCOUNTANT, SENIOR_ACCOUNTANT, ADMIN, SUPERADMIN
-
-**Request Body:**
-```json
-{
-  "perusahaanId": "string (required)",
-  "cabangId": "string (optional)",
-  "periodeId": "string (required)",
-  "tipe": "PENJUALAN | PEMBELIAN | BIAYA | ... (required)",
-  "nomorTransaksi": "string (optional, auto-generated)",
-  "tanggal": "datetime (required)",
-  "tanggalJatuhTempo": "datetime (optional)",
-  "pelangganId": "string (optional)",
-  "supplierId": "string (optional)",
-  "deskripsi": "string (required)",
-  "subtotal": "number (required)",
-  "diskon": "number (default: 0)",
-  "jumlahPajak": "number (default: 0)",
-  "total": "number (required)",
-  "mataUang": "string (default: IDR)",
-  "kurs": "number (default: 1)",
-  "detail": [
-    {
-      "urutan": "number (required)",
-      "akunId": "string (required)",
-      "deskripsi": "string (optional)",
-      "kuantitas": "number (default: 1)",
-      "hargaSatuan": "number (default: 0)",
-      "diskon": "number (default: 0)",
-      "subtotal": "number (required)"
-    }
-  ]
-}
-```
-
-**Response (201):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "clxxx...",
-    "nomorTransaksi": "PEN/202601/0001",
-    "tanggal": "2026-01-07T12:00:00Z",
-    "tipe": "PENJUALAN",
-    "total": 1110000,
-    "statusPembayaran": "BELUM_DIBAYAR",
-    "isPosted": false,
-    "detail": [/* transaction details */]
-  },
-  "message": "Transaksi berhasil dibuat"
-}
-```
-
-### 2. List Transactions
-**GET** `/transactions`
-
-**Query Parameters:**
-- `page`, `limit`
-- `perusahaanId`, `cabangId`, `periodeId`
-- `tipe`
-- `statusPembayaran` (BELUM_DIBAYAR, DIBAYAR_SEBAGIAN, LUNAS)
-- `pelangganId`, `supplierId`
-- `search`
-- `tanggalMulai`, `tanggalAkhir`
-- `isPosted`
-
-### 3. Get Transaction
-**GET** `/transactions/:id`
-
-**Response includes:**
-- Transaction details
-- Line items with account info
-- Customer/Supplier info
-- Payments
-- Voucher (if any)
-- Created by user info
-
-### 4. Update Transaction
-**PUT** `/transactions/:id`
-
-**Access:** ACCOUNTANT, SENIOR_ACCOUNTANT, ADMIN, SUPERADMIN
-
-**Note:** Can only update if transaction is NOT posted
-
-**Request Body:** (all fields optional)
-```json
-{
-  "tanggal": "datetime",
-  "deskripsi": "string",
-  "detail": [/* new detail array */]
-}
-```
-
-### 5. Post Transaction
-**POST** `/transactions/:id/post`
-
-**Access:** ACCOUNTANT, SENIOR_ACCOUNTANT, ADMIN, SUPERADMIN
-
-**Request Body:**
-```json
-{
-  "tanggalPosting": "datetime (optional, default: now)"
-}
-```
-
-**Effect:**
-- Sets `isPosted = true`
-- Sets `postedAt` and `postedBy`
-- TODO: Creates journal entries
-
-### 6. Void Transaction
-**POST** `/transactions/:id/void`
-
-**Access:** ACCOUNTANT, SENIOR_ACCOUNTANT, ADMIN, SUPERADMIN
-
-**Request Body:**
-```json
-{
-  "alasan": "string (required)"
-}
-```
-
-**Effect:**
-- Sets `isVoid = true`
-- Sets `voidAt`, `voidBy`, `voidReason`
-- TODO: Creates reversal journal entries
-
-### 7. Delete Transaction
-**DELETE** `/transactions/:id`
-
-**Access:** ACCOUNTANT, SENIOR_ACCOUNTANT, ADMIN, SUPERADMIN
-
-**Note:** Can only delete if transaction is NOT posted
-
-### 8. Add Payment
-**POST** `/transactions/:id/payments`
-
-**Access:** CASHIER, ACCOUNTANT, SENIOR_ACCOUNTANT, ADMIN, SUPERADMIN
-
-**Request Body:**
-```json
-{
-  "nomorPembayaran": "string (optional, auto-generated)",
-  "tanggal": "datetime (required)",
-  "tipePembayaran": "TUNAI | TRANSFER_BANK | CEK | GIRO | ... (required)",
-  "jumlah": "number (required)",
-  "bankRekeningId": "string (optional)",
-  "nomorReferensi": "string (optional)",
-  "keterangan": "string (optional)"
-}
-```
-
-**Effect:**
-- Creates payment record
-- Updates transaction `totalDibayar` and `sisaPembayaran`
-- Updates `statusPembayaran` (BELUM_DIBAYAR → DIBAYAR_SEBAGIAN → LUNAS)
-
----
-
-## Error Codes
-
-### HTTP Status Codes
-
-| Code | Meaning |
-|------|---------|
-| 200 | OK - Request successful |
-| 201 | Created - Resource created successfully |
-| 400 | Bad Request - Invalid input |
-| 401 | Unauthorized - Missing or invalid token |
-| 403 | Forbidden - Insufficient permissions |
-| 404 | Not Found - Resource not found |
-| 409 | Conflict - Duplicate resource |
-| 422 | Unprocessable Entity - Validation error |
-| 429 | Too Many Requests - Rate limit exceeded |
-| 500 | Internal Server Error |
-
-### Error Response Format
-
+**Gagal:**
 ```json
 {
   "success": false,
   "error": {
     "code": "VALIDATION_ERROR",
-    "message": "Email sudah terdaftar",
-    "details": {
-      "field": "email",
-      "value": "test@example.com"
-    }
+    "message": "Email wajib diisi"
   }
 }
 ```
-
-### Common Error Codes
-
-- `VALIDATION_ERROR` - Input validation failed
-- `AUTHENTICATION_ERROR` - Authentication failed
-- `AUTHORIZATION_ERROR` - Insufficient permissions
-- `NOT_FOUND` - Resource not found
-- `DUPLICATE_ERROR` - Resource already exists
-- `BUSINESS_LOGIC_ERROR` - Business rule violation
-
----
-
-## Response Format
-
-### Success Response
-
-```json
-{
-  "success": true,
-  "data": { /* response data */ },
-  "message": "Operation successful",
-  "meta": { /* pagination or additional info */ }
-}
-```
-
-### Pagination Meta
-
-```json
-{
-  "meta": {
-    "page": 1,
-    "limit": 10,
-    "total": 100,
-    "totalPages": 10
-  }
-}
-```
-
----
-
-## Rate Limiting
-
-**Default Limits:**
-- Window: 15 minutes
-- Max Requests: 100 per window
-
-**Headers:**
-```
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1704628800
-```
-
----
-
-## Testing with cURL
-
-### Get Access Token
-```bash
-# Login
-curl -X POST http://localhost:5000/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"emailOrUsername":"admin@akuntansi.id","password":"admin123"}'
-
-# Save the accessToken from response
-export TOKEN="your_access_token_here"
-```
-
-### Use Token in Requests
-```bash
-# Get current user
-curl http://localhost:5000/api/v1/auth/me \
-  -H "Authorization: Bearer $TOKEN"
-
-# List companies
-curl http://localhost:5000/api/v1/companies \
-  -H "Authorization: Bearer $TOKEN"
-```
-
----
-
-## Postman Collection
-
-Import this base configuration:
-
-```json
-{
-  "info": {
-    "name": "Akuntansi Backend API",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:5000/api/v1"
-    },
-    {
-      "key": "token",
-      "value": ""
-    }
-  ]
-}
-```
-
-Set `{{token}}` after login and use `{{baseUrl}}` for all requests.
-
----
-
-**Last Updated:** 8 Januari 2026, 19:20 WIB  
-**API Version:** 1.0.0  
-**Total Endpoints:** 157  
-**Status:** ✅ Production Ready  
-**Documentation Version:** 2.0.0

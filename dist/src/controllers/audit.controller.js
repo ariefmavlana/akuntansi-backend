@@ -6,16 +6,24 @@ class AuditController {
     // Get all audit logs
     async getAll(req, res, next) {
         try {
-            const filters = req.query;
-            const result = await audit_service_1.auditService.getAuditLogs(filters);
+            const { page, limit, modul, aksi, search, startDate, endDate } = req.query;
+            const result = await audit_service_1.auditService.getAuditLogs(req.user.perusahaanId, {
+                page: page ? Number(page) : 1,
+                limit: limit ? Number(limit) : 20,
+                module: modul,
+                action: aksi,
+                userName: search,
+                startDate: startDate ? new Date(startDate) : undefined,
+                endDate: endDate ? new Date(endDate) : undefined,
+            });
             return res.json({
-                success: true,
+                status: 'success',
                 data: result.data,
-                pagination: result.pagination,
+                meta: result.meta
             });
         }
         catch (error) {
-            next(error);
+            next(error); // Global error handler
         }
     }
     // Get single audit log
@@ -23,8 +31,11 @@ class AuditController {
         try {
             const { id } = req.params;
             const auditLog = await audit_service_1.auditService.getAuditLog(id);
+            if (!auditLog) {
+                return res.status(404).json({ status: 'error', message: 'Log not found' });
+            }
             return res.json({
-                success: true,
+                status: 'success',
                 data: auditLog,
             });
         }
@@ -35,12 +46,13 @@ class AuditController {
     // Get audit logs for specific record
     async getByRecord(req, res, next) {
         try {
-            const filters = req.query;
-            const result = await audit_service_1.auditService.getAuditByRecord(filters);
+            const { table, id } = req.params; // /records/:table/:id
+            // Note: Route params might need adjustment based on route definition
+            // Assuming route is /records/:table/:id
+            const logs = await audit_service_1.auditService.getAuditByRecord(req.user.perusahaanId, table, id);
             return res.json({
-                success: true,
-                data: result.data,
-                total: result.total,
+                status: 'success',
+                data: logs
             });
         }
         catch (error) {
@@ -51,20 +63,15 @@ class AuditController {
     async getUserActivity(req, res, next) {
         try {
             const { userId } = req.params;
-            const query = req.query;
-            const params = {
-                userId,
-                startDate: query.startDate,
-                endDate: query.endDate,
-                page: query.page ? Number(query.page) : undefined,
-                limit: query.limit ? Number(query.limit) : undefined,
-            };
-            const result = await audit_service_1.auditService.getUserActivity(params);
+            // Security check: only view own activity or Admin
+            if (userId !== req.user.userId && !req.user.role.includes('ADMIN')) {
+                return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            }
+            const limit = req.query.limit ? Number(req.query.limit) : 10;
+            const activities = await audit_service_1.auditService.getUserActivity(userId, limit);
             return res.json({
-                success: true,
-                data: result.data,
-                pagination: result.pagination,
-                statistics: result.statistics,
+                status: 'success',
+                data: activities
             });
         }
         catch (error) {

@@ -8,6 +8,7 @@ const database_1 = __importDefault(require("../config/database"));
 const logger_1 = __importDefault(require("../utils/logger"));
 const client_1 = require("@prisma/client");
 const auth_service_1 = require("./auth.service");
+const journal_service_1 = require("./journal.service");
 /**
  * Voucher Service
  * Handles voucher management with approval workflow and journal posting
@@ -470,8 +471,8 @@ class VoucherService {
             if (voucher.isPosted) {
                 throw new auth_service_1.ValidationError('Voucher sudah diposting');
             }
-            // TODO: Create journal entries from voucher details
-            // This would involve creating JurnalUmum and JurnalDetail records
+            // Create journal entries automatically
+            await journal_service_1.journalService.createFromVoucher(voucherId, requestingUserId);
             // Update voucher as posted
             const postedVoucher = await database_1.default.voucher.update({
                 where: { id: voucherId },

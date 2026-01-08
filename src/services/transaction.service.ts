@@ -10,6 +10,7 @@ import type {
     AddPaymentInput,
 } from '@/validators/transaction.validator';
 import { AuthenticationError, ValidationError } from './auth.service';
+import { journalService } from './journal.service';
 
 /**
  * Transaction Service
@@ -567,9 +568,8 @@ export class TransactionService {
                 throw new ValidationError('Transaksi yang sudah divoid tidak dapat diposting');
             }
 
-            // TODO: Create journal entries from transaction details
-            // This would involve creating JurnalUmum and JurnalDetail records
-            // based on the transaction type and details
+            // Create journal entries automatically
+            await journalService.createFromTransaction(transactionId, requestingUserId);
 
             // Update transaction as posted
             const postedTransaction = await prisma.transaksi.update({

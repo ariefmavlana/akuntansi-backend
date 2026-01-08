@@ -1605,6 +1605,7 @@ model Karyawan {
   departemen    String?
   jabatan       String?
   level         String?
+  statusPtkp    String    @default("TK/0") // TK/0, K/0, K/1, etc.
 
   gajiPokok    Decimal @db.Decimal(18, 2)
   bankNama     String?
@@ -2134,4 +2135,29 @@ model BackupLog {
 
   @@index([status])
   @@index([waktuMulai])
+}
+
+// ============================================================================
+// AUTHENTICATION & SECURITY
+// ============================================================================
+
+model TokenBlacklist {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
 }

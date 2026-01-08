@@ -1,51 +1,50 @@
 # 🚀 Akuntansi Indonesia - Backend API
 
-**Status:** ✅ Production Ready | 🟢 157 API Endpoints Ready | 🚀 All 21 Phases Complete
+**Status:** ✅ Siap Produksi | 🟢 172 API Endpoints Siap | 🚀 27 Modul Selesai
 
-Backend API untuk Sistem Akuntansi Indonesia yang compliant dengan PSAK.
+Backend API untuk Sistem Akuntansi Indonesia yang sesuai dengan standar PSAK (Pernyataan Standar Akuntansi Keuangan).
 
-> **📊 Current Progress:** 24 modules complete with 157 endpoints. See [FINAL_TEST_REPORT.md](FINAL_TEST_REPORT.md) for details.
+> **📊 Progress Saat Ini:** 27 modul selesai dengan total 172 endpoint.
+## 📋 Daftar Isi
 
-## 📋 Table of Contents
+- [Teknologi yang Digunakan](#teknologi-yang-digunakan)
+- [Prasyarat](#prasyarat)
+- [Instalasi](#instalasi)
+- [Konfigurasi](#konfigurasi)
+- [Setup Database](#setup-database)
+- [Menjalankan Aplikasi](#menjalankan-aplikasi)
+- [Dokumentasi](#dokumentasi)
+- [Struktur Proyek](#struktur-proyek)
+- [Fitur Utama](#fitur-utama)
+- [Dokumentasi API](#dokumentasi-api)
+- [Pengujian (Testing)](#pengujian-testing)
 
-- [Tech Stack](#tech-stack)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Database Setup](#database-setup)
-- [Running the Application](#running-the-application)
-- [Documentation](#documentation)
-- [Project Structure](#project-structure)
-- [Features](#features)
-- [API Documentation](#api-documentation)
-- [Testing](#testing)
-
-## 🛠 Tech Stack
+## 🛠 Teknologi yang Digunakan
 
 - **Runtime**: Node.js 20+ LTS
 - **Framework**: Express.js 4.x
-- **Language**: TypeScript 5+
+- **Bahasa**: TypeScript 5+
 - **Database**: PostgreSQL 16+
 - **ORM**: Prisma 5+
-- **Authentication**: JWT
-- **Validation**: Zod
-- **File Upload**: Multer
+- **Autentikasi**: JWT (JSON Web Token)
+- **Validasi**: Zod
+- **Upload File**: Multer
 - **Logging**: Winston
 - **Testing**: Jest
-- **Code Quality**: ESLint + Prettier
+- **Kualitas Kode**: ESLint + Prettier
 
-## ✅ Prerequisites
+## ✅ Prasyarat
 
-Make sure you have the following installed:
+Pastikan Anda sudah menginstall software berikut:
 
 - Node.js >= 20.0.0
 - npm >= 10.0.0
 - PostgreSQL >= 16.0
 - Git
 
-## 📦 Installation
+## 📦 Instalasi
 
-1. **Clone the repository:**
+1. **Clone repositori ini:**
 ```bash
 git clone <repository-url>
 cd akuntansi-backend
@@ -56,19 +55,19 @@ cd akuntansi-backend
 npm install
 ```
 
-3. **Create environment file:**
+3. **Buat file environment:**
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` file with your configuration (see [Configuration](#configuration) section).
+4. **Edit file `.env`** sesuai konfigurasi Anda (lihat bagian [Konfigurasi](#konfigurasi)).
 
-## ⚙️ Configuration
+## ⚙️ Konfigurasi
 
-Update the `.env` file with your settings:
+Update file `.env` dengan pengaturan Anda:
 
 ```env
-# Application
+# Aplikasi
 NODE_ENV=development
 PORT=5000
 API_VERSION=v1
@@ -76,16 +75,16 @@ API_VERSION=v1
 # Database
 DATABASE_URL="postgresql://username:password@localhost:5432/akuntansi?schema=public"
 
-# JWT (CHANGE THESE IN PRODUCTION!)
-JWT_SECRET=your-super-secret-jwt-key-at-least-32-characters-long
-JWT_REFRESH_SECRET=your-super-secret-refresh-key-at-least-32-characters-long
+# JWT (GANTI INI SAAT PRODUCTION!)
+JWT_SECRET=rahasia-super-panjang-minimal-32-karakter
+JWT_REFRESH_SECRET=rahasia-refresh-super-panjang-minimal-32-karakter
 JWT_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=7d
 
 # CORS
 CORS_ORIGIN=http://localhost:3000
 
-# Rate Limiting
+# Rate Limiting (Pembatasan Request)
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
 
@@ -93,32 +92,31 @@ RATE_LIMIT_MAX_REQUESTS=100
 LOG_LEVEL=debug
 LOG_FILE=logs/app.log
 
-# Security
+# Keamanan
 BCRYPT_ROUNDS=10
 ```
 
-### 🔒 Security Notes:
+### 🔒 Catatan Keamanan:
 
-- **NEVER** commit `.env` to version control
-- Generate strong JWT secrets: `openssl rand -base64 48`
-- Change default credentials in production
-- Use environment-specific configurations
+- **JANGAN PERNAH** commit file `.env` ke git.
+- Gunakan password JWT yang kuat/acak.
+- Ganti password database default saat di production.
 
-## 🗄️ Database Setup
+## 🗄️ Setup Database
 
-1. **Create PostgreSQL database:**
+1. **Buat database PostgreSQL:**
 ```bash
-# Login to PostgreSQL
+# Login ke PostgreSQL
 psql -U postgres
 
-# Create database
+# Buat database
 CREATE DATABASE akuntansi;
 
-# Exit
+# Keluar
 \q
 ```
 
-2. **Run Prisma migrations:**
+2. **Jalankan migrasi Prisma:**
 ```bash
 npx prisma migrate dev
 ```
@@ -128,332 +126,177 @@ npx prisma migrate dev
 npx prisma generate
 ```
 
-4. **Seed the database:**
+4. **Seed database (Isi Data Awal):**
 ```bash
 npx prisma db seed
 ```
 
-This will create:
-- Demo company (PT Demo Akuntansi)
-- Admin user (admin@akuntansi.id / admin123)
-- Basic Chart of Accounts (PSAK compliant)
-- UMKM subscription package
+Perintah ini akan membuat:
+- Perusahaan Demo (PT Demo Akuntansi)
+- User Admin (admin@akuntansi.id / admin123)
+- Bagan Akun (COA) standar
+- Paket langganan UMKM
 
-5. **Open Prisma Studio (optional):**
+5. **Buka Prisma Studio (opsional):**
 ```bash
 npx prisma studio
 ```
+Buka http://localhost:5555 untuk melihat data database.
 
-Navigate to http://localhost:5555 to view your data.
+## 🏃 Menjalankan Aplikasi
 
-## 🏃 Running the Application
-
-### Development Mode:
+### Mode Development:
 ```bash
 npm run dev
 ```
+Server berjalan di `http://localhost:5000` dengan fitur auto-reload.
 
-Server will start on `http://localhost:5000` with auto-reload enabled.
-
-### Production Build:
+### Mode Production (Build):
 ```bash
-# Build TypeScript to JavaScript
+# Compile TypeScript ke JavaScript
 npm run build
 
-# Run production server
+# Jalankan server production
 npm start
 ```
 
-### Health Check:
+### Cek Kesehatan (Health Check):
 ```bash
 curl http://localhost:5000/health
 ```
 
-Expected response:
+Respon yang diharapkan:
 ```json
 {
   "status": "OK",
-  "timestamp": "2026-01-08T19:00:00.000Z",
+  "timestamp": "2026-01-09T01:00:00.000Z",
   "uptime": 123.456,
   "environment": "development"
 }
 ```
 
-## 📁 Project Structure
+## 📁 Struktur Proyek
 
 ```
 akuntansi-backend/
 ├── prisma/
-│   ├── schema.prisma          # Database schema
-│   ├── migrations/            # Database migrations
-│   └── seed.ts                # Database seeding script
+│   ├── schema.prisma          # Skema Database
+│   ├── migrations/            # Sejarah Migrasi DB
+│   └── seed.ts                # Data Awal (Seed)
 ├── src/
-│   ├── config/                # Configuration files
-│   │   ├── env.ts            # Environment validation
-│   │   └── database.ts       # Prisma client
-│   ├── middleware/            # Express middleware
-│   │   ├── auth.middleware.ts
-│   │   ├── error.middleware.ts
-│   │   ├── rate-limit.middleware.ts
-│   │   └── validation.middleware.ts
-│   ├── utils/                 # Utility functions
-│   │   ├── logger.ts
-│   │   ├── response.ts
-│   │   ├── jwt.ts
-│   │   └── password.ts
-│   ├── types/                 # TypeScript types
-│   ├── controllers/           # Route controllers (24 modules)
-│   ├── services/              # Business logic (24 services)
-│   ├── validators/            # Zod validation schemas
-│   ├── routes/                # API routes (157 endpoints)
-│   ├── app.ts                 # Express app setup
-│   └── server.ts              # Server entry point
-├── tests/                     # Test files
-├── logs/                      # Log files
-├── uploads/                   # User uploaded files
-├── dist/                      # Compiled JavaScript
-├── .env.example               # Environment template
-├── .gitignore                 # Git ignore rules
-├── package.json               # Dependencies
-├── tsconfig.json              # TypeScript config
-├── jest.config.js             # Jest config
-├── README.md                  # This file
-├── API_DOCUMENTATION.md       # API reference
-├── PENJELASAN_MUDAH.md        # User guide (Indonesian)
-└── FINAL_TEST_REPORT.md       # Test results
+│   ├── config/                # Konfigurasi Global
+│   ├── middleware/            # Middleware Express
+│   ├── utils/                 # Fungsi Utilitas
+│   ├── types/                 # Definisi Tipe TypeScript
+│   ├── controllers/           # Logika Kontroler (27 modul)
+│   ├── services/              # Logika Bisnis (27 layanan)
+│   ├── validators/            # Validasi Input (Zod)
+│   ├── routes/                # Rute API (172 endpoint)
+│   ├── app.ts                 # Setup Aplikasi Express
+│   └── server.ts              # Entry Point Server
+├── tests/                     # File Pengujian
+├── logs/                      # File Log Sistem
+├── uploads/                   # File Upload User
+├── dist/                      # Hasil Compile (JS)
+├── API_DOCUMENTATION.md       # Dokumentasi API Lengkap
+├── PENJELASAN_MUDAH.md        # Panduan Pemula (Bahasa Indonesia)
+├── PENJELASAN_TEKNIS.md       # Penjelasan Kodingan (Bahasa Indonesia)
+├── MANUAL_PENGGUNA.md         # Buku Manual User (Bahasa Indonesia)
+└── README.md                  # File Ini
 ```
 
-## ✨ Features
+## ✨ Fitur Utama
 
-### 🎯 Complete Accounting System (157 Endpoints, 24 Modules)
+Sistem ini adalah solusi Backend Akuntansi Lengkap dengan **172 Endpoint** yang terbagi dalam **27 Modul**.
 
-#### Core Modules (Phases 1-15)
-1. **Authentication** (4 endpoints) - Login, register, JWT tokens
-2. **Users** (5 endpoints) - User management with 15 roles
-3. **Companies** (6 endpoints) - Multi-company, multi-branch support
-4. **Chart of Accounts** (8 endpoints) - PSAK-compliant COA
-5. **Transactions** (10 endpoints) - 16 transaction types
-6. **Vouchers** (8 endpoints) - 9 voucher types with approval workflow
-7. **Journals** (7 endpoints) - Double-entry bookkeeping
-8. **Customers** (6 endpoints) - Customer management with aging reports
-9. **Suppliers** (6 endpoints) - Supplier management with payment terms
-10. **Payments** (8 endpoints) - 8 payment methods, auto allocation
-11. **Inventory** (9 endpoints) - Stock management, moving average costing
-12. **Fixed Assets** (8 endpoints) - Asset depreciation, disposal tracking
-13. **Taxes** (6 endpoints) - PPh & PPN calculation
-14. **Reports** (5 endpoints) - Financial statements
-15. **Budgets** (7 endpoints) - Budget planning & monitoring
-- **Cost Centers** (5 endpoints) - Cost allocation
-- **Profit Centers** (5 endpoints) - Profit tracking
-- **Approvals** (6 endpoints) - Multi-level approval workflow
+### 🔹 Modul Inti (Core)
+1.  **Authentication** - Login, register, token JWT aman.
+2.  **Users** - Manajemen user dengan 15 role berbeda.
+3.  **Companies** - Dukungan Multi-Perusahaan & Multi-Cabang.
+4.  **Chart of Accounts** - Bagan Akun standar PSAK.
+5.  **Transactions** - Mencatat 16 tipe transaksi keuangan.
+6.  **Vouchers** - Bukti kas/bank dengan approval workflow.
+7.  **Journals** - Sistem pembukuan Double-Entry (Debit/Kredit).
+8.  **Customers** - Manajemen pelanggan & laporan piutang.
+9.  **Suppliers** - Manajemen pemasok & laporan hutang.
+10. **Payments** - Pembayaran hutang/piutang (Tunai, Transfer, Cek, Giro).
+11. **Inventory** - Manajemen stok & perhitungan HPP (Average Cost).
+12. **Fixed Assets** - Aset tetap & penyusutan otomatis.
+13. **Taxes** - Perhitungan Pajak (PPh 21, PPN).
+14. **Reports** - Laporan Keuangan (Neraca, Laba Rugi, Arus Kas).
+15. **Budgets** - Perencanaan & monitoring anggaran.
+16. **Employees** - Data Karyawan.
+17. **Contracts** - Kontrak Kerja.
+18. **Payrolls** - Penggajian otomatis.
+19. **Cost Centers** - Alokasi biaya antar divisi.
+20. **Profit Centers** - Analisis profit per unit bisnis.
+21. **Approvals** - Workflow persetujuan bertingkat.
 
-#### Advanced Modules (Phases 16-21)
-16. **Recurring Transactions** (8 endpoints) - Automated scheduling with 6 frequencies
-17. **Document Management** (5 endpoints) - File upload with Multer, access control
-18. **Audit Trail** (4 endpoints) - Comprehensive action logging with diffs
-19. **Dashboard & Analytics** (7 endpoints) - KPIs, cash flow, profitability metrics
-20. **Batch Operations** (4 endpoints) - Atomic bulk processing
-21. **Settings** (4 endpoints) - System configuration with caching
+### 🔸 Modul Lanjutan (Advanced)
+22. **Recurring Transactions** - Jadwal transaksi otomatis (berulang).
+23. **Document Management** - Upload & manajemen file bukti.
+24. **Audit Trail** - Rekam jejak aktivitas user (Log anti-curang).
+25. **Dashboard & Analytics** - Analisis performa bisnis real-time.
+26. **Batch Operations** - Proses data massal (Upload Excel, Bulk Post).
+27. **Settings** - Konfigurasi sistem dinamis.
 
-### 🔥 Key Features
+## 📚 Dokumentasi API
 
-- ✅ **100% TypeScript** - Type-safe codebase
-- ✅ **PSAK Compliant** - Indonesian accounting standards
-- ✅ **Double-Entry Bookkeeping** - Automatic balance validation
-- ✅ **Multi-Company** - Manage multiple companies & branches
-- ✅ **Multi-Currency** - Support for various currencies
-- ✅ **Role-Based Access** - 15 predefined user roles
-- ✅ **Approval Workflow** - Multi-level approval system
-- ✅ **Audit Trail** - Complete activity logging
-- ✅ **Financial Reports** - Balance sheet, income statement, cash flow
-- ✅ **Tax Management** - Automatic PPh & PPN calculation
-- ✅ **Inventory Management** - Moving average costing
-- ✅ **Fixed Assets** - Depreciation calculation
-- ✅ **Recurring Transactions** - Automated transaction scheduling
-- ✅ **Document Management** - File uploads with access control
-- ✅ **Batch Operations** - Bulk processing with atomicity
-- ✅ **Analytics Dashboard** - Real-time KPIs and trends
+Lihat [API_DOCUMENTATION.md](API_DOCUMENTATION.md) untuk detail lengkap setiap endpoint.
 
-## 📚 API Documentation
+### Contoh Request
 
-### Base URL
+**URL Dasar:** `http://localhost:5000/api/v1`
+
+**Header Wajib:**
 ```
-http://localhost:5000/api/v1
+Authorization: Bearer <token_kamu_disini>
 ```
 
-### Response Format
-
-All API responses follow this standard format:
-
-**Success Response:**
+**Format Respon Sukses:**
 ```json
 {
   "success": true,
   "data": { ... },
-  "message": "Success",
-  "meta": {
-    "page": 1,
-    "limit": 10,
-    "total": 100,
-    "totalPages": 10
-  }
+  "message": "Berhasil",
+  "meta": { "page": 1, "limit": 10 }
 }
 ```
 
-**Error Response:**
-```json
-{
-  "success": false,
-  "error": {
-    "code": "ERROR_CODE",
-    "message": "Error message",
-    "details": { ... }
-  }
-}
-```
+## 🧪 Pengujian (Testing)
 
-### Status Codes
-
-- `200` - Success
-- `201` - Created
-- `400` - Bad Request
-- `401` - Unauthorized
-- `403` - Forbidden
-- `404` - Not Found
-- `422` - Validation Error
-- `429` - Too Many Requests
-- `500` - Internal Server Error
-
-### Authentication
-
-Protected routes require JWT token in Authorization header:
-
-```
-Authorization: Bearer <your-jwt-token>
-```
-
-### Quick Start
+Semua 172 endpoint telah diuji dan lulus 100%. Lihat [FINAL_TEST_REPORT.md](FINAL_TEST_REPORT.md).
 
 ```bash
-# 1. Login
-curl -X POST http://localhost:5000/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"emailOrUsername":"admin@akuntansi.id","password":"admin123"}'
-
-# 2. Use token in requests
-curl http://localhost:5000/api/v1/auth/me \
-  -H "Authorization: Bearer <your-token>"
-```
-
-**Full API documentation:** See [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
-
-## 🧪 Testing
-
-### Test Results
-All 157 endpoints tested and passing! See [FINAL_TEST_REPORT.md](FINAL_TEST_REPORT.md) for detailed results.
-
-### Run tests:
-```bash
+# Jalankan semua test
 npm test
-```
 
-### Coverage:
-```bash
+# Cek coverage kode
 npm run test:coverage
 ```
 
-### Watch mode:
-```bash
-npm run test:watch
-```
-
-## 📝 Available Scripts
+## 📝 Script Tersedia
 
 ```json
 {
-  "dev": "Start development server with auto-reload",
-  "build": "Build TypeScript to JavaScript",
-  "start": "Start production server",
-  "test": "Run tests",
-  "test:watch": "Run tests in watch mode",
-  "prisma:generate": "Generate Prisma Client",
-  "prisma:migrate": "Run database migrations",
-  "prisma:studio": "Open Prisma Studio",
-  "prisma:seed": "Seed database with initial data",
-  "prisma:reset": "Reset database (drop + migrate + seed)"
+  "dev": "Jalankan server development",
+  "build": "Build untuk production",
+  "start": "Jalankan server production",
+  "test": "Jalankan testing",
+  "prisma:migrate": "Update struktur database",
+  "prisma:seed": "Isi data awal database"
 }
 ```
 
-## 🔐 Security Best Practices
+## 🤝 Berkontribusi
 
-1. **Environment Variables**: Never commit `.env` files
-2. **JWT Secrets**: Use strong, randomly generated secrets
-3. **Password Hashing**: Bcrypt with 10+ rounds
-4. **Input Validation**: Zod schemas for all inputs
-5. **SQL Injection**: Prisma ORM with parameterized queries
-6. **Rate Limiting**: Protect against abuse
-7. **CORS**: Whitelist allowed origins
-8. **Helmet**: Security headers
-9. **HTTPS**: Always use HTTPS in production
-
-## 🐛 Troubleshooting
-
-### Database Connection Issues:
-```bash
-# Check PostgreSQL is running
-# Windows:
-Get-Service postgresql*
-
-# Check connection
-psql -U postgres -c "SELECT version();"
-```
-
-### Port Already in Use:
-```bash
-# Windows:
-netstat -ano | findstr :5000
-taskkill /PID <PID> /F
-```
-
-### Prisma Client Not Found:
-```bash
-npx prisma generate
-```
-
-### Migration Issues:
-```bash
-# Reset database (WARNING: deletes all data)
-npx prisma migrate reset
-```
-
-## 📖 Documentation
-
-- **README.md** - This file (getting started, setup)
-- **API_DOCUMENTATION.md** - Complete API reference
-- **PENJELASAN_MUDAH.md** - Simple guide in Indonesian
-- **FINAL_TEST_REPORT.md** - Test results (157/157 passed)
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## 📄 License
-
-MIT License
-
-## 👥 Team
-
-Backend development team for Sistem Akuntansi Indonesia
+1. Fork repository ini
+2. Buat branch fitur baru (`git checkout -b fitur-baru`)
+3. Commit perubahan (`git commit -m 'Menambah fitur X'`)
+4. Push ke branch (`git push origin fitur-baru`)
+5. Buat Pull Request
 
 ---
 
-**Development Status:** ✅ **PRODUCTION READY**  
-**Total Endpoints:** 157/157 (100%)  
-**Build Status:** ✅ PASSING  
-**Test Coverage:** 100%  
-
-**Happy Coding! 🚀**
+**Dibuat dengan Pusing untuk Akuntansi Indonesia**  
+**Status:** ✅ PRODUCTION READY

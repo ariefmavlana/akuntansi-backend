@@ -5,10 +5,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authService = exports.AuthService = exports.ValidationError = exports.AuthenticationError = void 0;
 const database_1 = __importDefault(require("../config/database"));
+const crypto_1 = __importDefault(require("crypto"));
 const password_1 = require("../utils/password");
 const jwt_1 = require("../utils/jwt");
 const logger_1 = __importDefault(require("../utils/logger"));
 const client_1 = require("@prisma/client");
+const audit_service_1 = require("../services/audit.service");
 // Custom error classes
 class AuthenticationError extends Error {
     constructor(message) {
@@ -234,7 +236,7 @@ class AuthService {
     }
     /**
      * Request password reset
-     * TODO: Implement email sending with reset token
+     * Generates a token and stores it in DB. Logs the token (simulating email).
      */
     async requestPasswordReset(data) {
         try {
@@ -246,13 +248,19 @@ class AuthService {
                 logger_1.default.info(`Password reset requested for non-existent email: ${data.email}`);
                 return;
             }
-            // TODO: Generate reset token and send email
-            // For now, just log
-            logger_1.default.info(`Password reset requested for: ${user.email}`);
-            // In production:
-            // 1. Generate secure random token
-            // 2. Store token in database with expiry (e.g., 1 hour)
-            // 3. Send email with reset link
+            // Generate Token
+            const token = crypto_1.default.randomUUID(); // Simple UUID token
+            const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 Hour
+            await database_1.default.passwordResetToken.create({
+                data: {
+                    email: user.email,
+                    token,
+                    expiresAt
+                }
+            });
+            // Log token (Mock Email Sending)
+            logger_1.default.info(`[MOCK EMAIL] Password reset token for ${user.email}: ${token}`);
+            logger_1.default.info(`[MOCK EMAIL] Link: https://app.example.com/reset-password?token=${token}`);
         }
         catch (error) {
             logger_1.default.error('Request password reset error:', error);
@@ -261,19 +269,33 @@ class AuthService {
     }
     /**
      * Reset password with token
-     * TODO: Implement token verification and password reset
      */
     async resetPassword(data) {
         try {
-            // TODO: Verify reset token from database
-            // For now, throw error
-            throw new ValidationError('Fitur reset password belum diimplementasikan');
-            // In production:
-            // 1. Verify token exists and not expired
-            // 2. Get user from token
-            // 3. Hash new password
-            // 4. Update user password
-            // 5. Delete/invalidate token
+            const resetRecord = await database_1.default.passwordResetToken.findUnique({
+                where: { token: data.token }
+            });
+            if (!resetRecord) {
+                throw new ValidationError('Token tidak valid');
+            }
+            if (resetRecord.used) {
+                throw new ValidationError('Token sudah digunakan');
+            }
+            if (new Date() > resetRecord.expiresAt) {
+                throw new ValidationError('Token sudah kadaluwarsa');
+            }
+            // Update Password
+            const hashedPassword = await (0, password_1.hashPassword)(data.newPassword);
+            await database_1.default.pengguna.update({
+                where: { email: resetRecord.email },
+                data: { password: hashedPassword }
+            });
+            // Mark token used
+            await database_1.default.passwordResetToken.update({
+                where: { id: resetRecord.id },
+                data: { used: true }
+            });
+            logger_1.default.info(`Password reset success for ${resetRecord.email}`);
         }
         catch (error) {
             logger_1.default.error('Reset password error:', error);
@@ -282,20 +304,42 @@ class AuthService {
     }
     /**
      * Logout user
-     * TODO: Implement token blacklist
+     * Adds refresh token to blacklist
      */
-    async logout(userId) {
+    async logout(userId, refreshToken) {
         try {
+            if (refreshToken) {
+                // Decode to get expiry if possible, or usually just set a standard expiry
+                // For simplicity, we set expiry to 7 days from now (standard refresh token life)
+                const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+                await database_1.default.tokenBlacklist.create({
+                    data: {
+                        token: refreshToken,
+                        expiresAt
+                    }
+                });
+                logger_1.default.info(`Token blacklisted for user: ${userId}`);
+            }
+            // Audit Log
+            if (userId) {
+                const user = await database_1.default.pengguna.findUnique({ where: { id: userId } });
+                if (user) {
+                    audit_service_1.auditService.logActivity({
+                        perusahaanId: user.perusahaanId,
+                        penggunaId: user.id,
+                        aksi: 'LOGOUT',
+                        modul: 'AUTH',
+                        namaTabel: 'Pengguna',
+                        idData: user.id,
+                        keterangan: 'User logged out'
+                    }).catch(err => logger_1.default.error('Audit Log Error:', err));
+                }
+            }
             logger_1.default.info(`User logged out: ${userId}`);
-            // TODO: Add refresh token to blacklist
-            // In production:
-            // 1. Store refresh token in Redis blacklist
-            // 2. Set expiry to match token expiry
-            // 3. Check blacklist on refresh token endpoint
         }
         catch (error) {
             logger_1.default.error('Logout error:', error);
-            throw error;
+            // Don't throw on logout error, just log it
         }
     }
     /**

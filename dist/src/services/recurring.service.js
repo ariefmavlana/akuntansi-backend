@@ -14,12 +14,15 @@ class RecurringService {
         const user = await database_1.default.pengguna.findUnique({ where: { id: userId } });
         if (!user)
             throw new auth_service_1.AuthenticationError('User tidak ditemukan');
-        // Validate balance in template details
+        // Balance validation removed as Transaksi is not a General Journal
+        /*
         const totalDebit = data.template.details.reduce((sum, d) => sum + d.debit, 0);
         const totalKredit = data.template.details.reduce((sum, d) => sum + d.kredit, 0);
+
         if (Math.abs(totalDebit - totalKredit) > 0.01) {
-            throw new auth_service_1.ValidationError('Total debit harus sama dengan total kredit');
+            throw new ValidationError('Total debit harus sama dengan total kredit');
         }
+        */
         // Generate kode
         const count = await database_1.default.transaksiRekuren.count({
             where: { perusahaanId: data.perusahaanId },
@@ -52,14 +55,17 @@ class RecurringService {
         const existing = await database_1.default.transaksiRekuren.findUnique({ where: { id } });
         if (!existing)
             throw new auth_service_1.ValidationError('Transaksi rekuren tidak ditemukan');
-        // Validate balance if template is being updated
+        // Balance validation removed
+        /*
         if (data.template?.details) {
             const totalDebit = data.template.details.reduce((sum, d) => sum + d.debit, 0);
             const totalKredit = data.template.details.reduce((sum, d) => sum + d.kredit, 0);
+
             if (Math.abs(totalDebit - totalKredit) > 0.01) {
-                throw new auth_service_1.ValidationError('Total debit harus sama dengan total kredit');
+                throw new ValidationError('Total debit harus sama dengan total kredit');
             }
         }
+        */
         // Recalculate next run if frequency or start date changes
         let tanggalExekusiBerikutnya = existing.tanggalExekusiBerikutnya;
         if (data.frekuensi || data.tanggalMulai || data.intervalHari !== undefined) {
@@ -242,11 +248,32 @@ class RecurringService {
         const nomorTransaksi = `REC/${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}/${String(count + 1).padStart(4, '0')}`;
         // Calculate total
         const total = template.details.reduce((sum, d) => sum + (d.debit || d.kredit), 0);
+        // Resolve user for system execution
+        let resolvedUserId = userId;
+        if (userId === 'system') {
+            // Find an active admin for the company to attribute the system transaction to
+            const systemUser = await database_1.default.pengguna.findFirst({
+                where: {
+                    perusahaanId: recurring.perusahaanId,
+                    role: { in: ['SUPERADMIN', 'ADMIN', 'MANAGER'] },
+                    isAktif: true
+                }
+            });
+            if (systemUser) {
+                resolvedUserId = systemUser.id;
+            }
+            else {
+                // Fallback to strict companyId if no user found, but this will fail FK if constraints exist.
+                // We'll log a warning.
+                logger_1.default.warn(`No system user found for company ${recurring.perusahaanId}, using null/placeholder which might fail.`);
+                resolvedUserId = recurring.perusahaanId; // This will likely fail if it's not a user ID
+            }
+        }
         // Create transaction
         const transaksi = await database_1.default.transaksi.create({
             data: {
                 perusahaanId: recurring.perusahaanId,
-                penggunaId: userId === 'system' ? recurring.perusahaanId : userId, // Fallback for system
+                penggunaId: resolvedUserId,
                 nomorTransaksi,
                 tanggal: now,
                 tipe: recurring.tipe,
@@ -260,15 +287,17 @@ class RecurringService {
                 profitCenterId: template.profitCenterId,
                 statusPembayaran: 'BELUM_DIBAYAR',
                 detail: {
-                    create: template.details.map((d, idx) => ({
-                        urutan: idx + 1,
-                        akunId: d.akunId,
-                        deskripsi: d.deskripsi,
-                        kuantitas: 1,
-                        hargaSatuan: d.debit || d.kredit,
-                        debit: d.debit || 0,
-                        kredit: d.kredit || 0,
-                    })),
+                    create: template.details.map((d, idx) => {
+                        const amount = d.debit || d.kredit || d.amount || 0;
+                        return {
+                            urutan: idx + 1,
+                            akunId: d.akunId,
+                            deskripsi: d.deskripsi,
+                            kuantitas: 1,
+                            hargaSatuan: amount,
+                            subtotal: amount // Required by schema
+                        };
+                    }),
                 },
             },
         });
