@@ -1,11 +1,17 @@
-import { Response } from 'express';
-import { AuthenticatedRequest } from '@/middlewares/auth.middleware';
+import { Request, Response, NextFunction } from 'express';
 import { dashboardService } from '@/services/dashboard.service';
-import logger from '@/utils/logger';
+import { successResponse } from '@/utils/response';
 
+/**
+ * Dashboard Controller
+ * Handles HTTP requests for dashboard stats and widgets
+ */
 export class DashboardController {
-    // Get Stats
-    static async getStats(req: AuthenticatedRequest, res: Response) {
+    /**
+     * Get dashboard statistics
+     * GET /api/v1/dashboard/stats
+     */
+    async getStats(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { startDate, endDate } = req.query;
             const start = startDate ? new Date(startDate as string) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -13,56 +19,55 @@ export class DashboardController {
 
             const stats = await dashboardService.getStats(req.user!.perusahaanId, start, end);
 
-            res.json({
-                status: 'success',
-                data: stats
-            });
-        } catch (error: any) {
-            logger.error('Error fetching dashboard stats:', error);
-            res.status(500).json({ status: 'error', message: 'Failed to fetch stats' });
+            successResponse(res, stats, 'Dashboard statistics retrieved successfully');
+        } catch (error) {
+            next(error);
         }
     }
 
-    // Get User Widgets
-    static async getWidgets(req: AuthenticatedRequest, res: Response) {
+    /**
+     * Get user widgets
+     * GET /api/v1/dashboard/widgets
+     */
+    async getWidgets(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const widgets = await dashboardService.getUserWidgets(req.user!.userId, req.user!.perusahaanId);
-            res.json({
-                status: 'success',
-                data: widgets
-            });
-        } catch (error: any) {
-            res.status(500).json({ status: 'error', message: error.message });
+            successResponse(res, widgets, 'User widgets retrieved successfully');
+        } catch (error) {
+            next(error);
         }
     }
 
-    // Add Widget
-    static async createWidget(req: AuthenticatedRequest, res: Response) {
+    /**
+     * Add new widget
+     * POST /api/v1/dashboard/widgets
+     */
+    async createWidget(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const widget = await dashboardService.createWidget(
                 req.user!.userId,
                 req.user!.perusahaanId,
                 req.body
             );
-            res.status(201).json({
-                status: 'success',
-                data: widget
-            });
-        } catch (error: any) {
-            res.status(400).json({ status: 'error', message: error.message });
+            successResponse(res, widget, 'Widget created successfully', 201);
+        } catch (error) {
+            next(error);
         }
     }
 
-    // Delete Widget
-    static async deleteWidget(req: AuthenticatedRequest, res: Response) {
+    /**
+     * Delete widget
+     * DELETE /api/v1/dashboard/widgets/:id
+     */
+    async deleteWidget(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             await dashboardService.deleteWidget(req.params.id, req.user!.userId);
-            res.json({
-                status: 'success',
-                message: 'Widget deleted'
-            });
-        } catch (error: any) {
-            res.status(400).json({ status: 'error', message: error.message });
+            successResponse(res, null, 'Widget deleted successfully');
+        } catch (error) {
+            next(error);
         }
     }
 }
+
+// Export singleton instance
+export const dashboardController = new DashboardController();

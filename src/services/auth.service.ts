@@ -32,10 +32,8 @@ export class ValidationError extends Error {
 // Types
 interface AuthResponse {
     user: Omit<Pengguna, 'password'>;
-    tokens: {
-        accessToken: string;
-        refreshToken: string;
-    };
+    accessToken: string;
+    refreshToken: string;
 }
 
 interface TokenPayload {
@@ -122,7 +120,7 @@ export class AuthService {
 
             return {
                 user: userWithoutPassword,
-                tokens,
+                ...tokens,
             };
         } catch (error) {
             logger.error('Registration error:', error);
@@ -174,7 +172,7 @@ export class AuthService {
 
             return {
                 user: userWithoutPassword,
-                tokens,
+                ...tokens,
             };
         } catch (error) {
             logger.error('Login error:', error);
@@ -185,7 +183,7 @@ export class AuthService {
     /**
      * Refresh access token
      */
-    async refreshToken(data: RefreshTokenInput): Promise<{ accessToken: string }> {
+    async refreshToken(data: RefreshTokenInput): Promise<{ accessToken: string; refreshToken: string }> {
         try {
             // Verify refresh token
             const payload = verifyToken(data.refreshToken, 'refresh') as TokenPayload;
@@ -199,14 +197,12 @@ export class AuthService {
                 throw new AuthenticationError('Token tidak valid');
             }
 
-            // Generate new access token
+            // Generate new tokens
             const tokens = this.generateUserTokens(user);
 
             logger.info(`Token refreshed for user: ${user.email}`);
 
-            return {
-                accessToken: tokens.accessToken,
-            };
+            return tokens;
         } catch (error) {
             logger.error('Refresh token error:', error);
             throw new AuthenticationError('Token tidak valid atau sudah kadaluarsa');

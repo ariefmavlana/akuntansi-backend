@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { transactionController } from '@/controllers/transaction.controller';
-import { validate } from '@/middleware/validation.middleware';
-import { authenticate, authorize } from '@/middleware/auth.middleware';
+import { validate } from '@/middlewares/validation.middleware';
+import { authenticate, authorize } from '@/middlewares/auth.middleware';
 import {
     createTransactionSchema,
     updateTransactionSchema,

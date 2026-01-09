@@ -3,10 +3,10 @@ import { TipeWidget, TipeAkun } from '@prisma/client';
 
 export class DashboardService {
     /**
-     * Get Key Financial Stats (Revenue, Expense, Profit)
+     * Get Key Financial Stats (Revenue, Expense, Profit, Cash, etc.)
      */
     async getStats(perusahaanId: string, startDate: Date, endDate: Date) {
-        // 1. Calculate Revenue (Pendapatan - Type 4)
+        // 1. Calculate Revenue (Pendapatan)
         const revenueAgg = await prisma.jurnalDetail.aggregate({
             _sum: { kredit: true, debit: true },
             where: {
@@ -26,7 +26,7 @@ export class DashboardService {
         const revDebit = revenueAgg._sum.debit ? revenueAgg._sum.debit.toNumber() : 0;
         const totalRevenue = revCredit - revDebit;
 
-        // 2. Calculate Expenses (Beban - Type 5)
+        // 2. Calculate Expenses (Beban)
         const expenseAgg = await prisma.jurnalDetail.aggregate({
             _sum: { debit: true, kredit: true },
             where: {
@@ -46,13 +46,60 @@ export class DashboardService {
         const expCredit = expenseAgg._sum.kredit ? expenseAgg._sum.kredit.toNumber() : 0;
         const totalExpense = expDebit - expCredit;
 
-        // 3. Net Profit
-        const netProfit = totalRevenue - totalExpense;
+        // 3. Cash Balance (Current balance, not limited by date range for cumulative accounts)
+        const cashAgg = await prisma.jurnalDetail.aggregate({
+            _sum: { debit: true, kredit: true },
+            where: {
+                jurnal: { perusahaanId },
+                akun: { kategoriAset: 'KAS_DAN_SETARA_KAS' }
+            }
+        });
+        const cashBalance = (cashAgg._sum.debit?.toNumber() ?? 0) - (cashAgg._sum.kredit?.toNumber() ?? 0);
+
+        // 4. Accounts Receivable
+        const arAgg = await prisma.jurnalDetail.aggregate({
+            _sum: { debit: true, kredit: true },
+            where: {
+                jurnal: { perusahaanId },
+                akun: { kategoriAset: 'PIUTANG_USAHA' }
+            }
+        });
+        const accountsReceivable = (arAgg._sum.debit?.toNumber() ?? 0) - (arAgg._sum.kredit?.toNumber() ?? 0);
+
+        // 5. Accounts Payable
+        const apAgg = await prisma.jurnalDetail.aggregate({
+            _sum: { kredit: true, debit: true },
+            where: {
+                jurnal: { perusahaanId },
+                akun: { kategoriLiabilitas: 'HUTANG_USAHA' }
+            }
+        });
+        const accountsPayable = (apAgg._sum.kredit?.toNumber() ?? 0) - (apAgg._sum.debit?.toNumber() ?? 0);
+
+        // 6. Inventory Value
+        const invAgg = await prisma.jurnalDetail.aggregate({
+            _sum: { debit: true, kredit: true },
+            where: {
+                jurnal: { perusahaanId },
+                akun: { kategoriAset: 'PERSEDIAAN' }
+            }
+        });
+        const inventoryValue = (invAgg._sum.debit?.toNumber() ?? 0) - (invAgg._sum.kredit?.toNumber() ?? 0);
+
+        // 7. Pending Approvals
+        const pendingApprovals = await prisma.approvalFlow.count({
+            where: { status: 'PENDING' }
+        });
 
         return {
-            revenue: totalRevenue,
-            expense: totalExpense,
-            netProfit
+            totalRevenue,
+            totalExpense,
+            netProfit: totalRevenue - totalExpense,
+            cashBalance,
+            accountsReceivable,
+            accountsPayable,
+            inventoryValue,
+            pendingApprovals
         };
     }
 

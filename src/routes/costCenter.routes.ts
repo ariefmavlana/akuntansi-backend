@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { costCenterController } from '@/controllers/costCenter.controller';
-import { authenticate } from '@/middleware/auth.middleware';
-import { validate } from '@/middleware/validation.middleware';
+import { authenticate } from '@/middlewares/auth.middleware';
+import { validate } from '@/middlewares/validation.middleware';
 import {
     createCostCenterSchema,
     updateCostCenterSchema,

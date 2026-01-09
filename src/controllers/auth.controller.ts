@@ -56,7 +56,7 @@ export class AuthController {
      */
     async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const userId = req.user!.userId;
+            const userId = (req as any).user.userId;
             await authService.logout(userId);
 
             successResponse(res, null, 'Logout berhasil');
@@ -71,7 +71,7 @@ export class AuthController {
      */
     async getCurrentUser(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const userId = req.user!.userId;
+            const userId = (req as any).user.userId;
             const user = await authService.getCurrentUser(userId);
 
             successResponse(res, user, 'Data user berhasil diambil');
@@ -86,7 +86,7 @@ export class AuthController {
      */
     async changePassword(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const userId = req.user!.userId;
+            const userId = (req as any).user.userId;
             await authService.changePassword(userId, req.body);
 
             successResponse(res, null, 'Password berhasil diubah');

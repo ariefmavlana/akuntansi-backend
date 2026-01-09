@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { voucherController } from '@/controllers/voucher.controller';
-import { validate } from '@/middleware/validation.middleware';
-import { authenticate, authorize } from '@/middleware/auth.middleware';
+import { validate } from '@/middlewares/validation.middleware';
+import { authenticate, authorize } from '@/middlewares/auth.middleware';
 import {
     createVoucherSchema,
     updateVoucherSchema,

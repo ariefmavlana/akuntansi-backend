@@ -3,11 +3,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
-import { env } from '@/config/env';
-import { errorHandler, notFoundHandler } from '@/middlewares/error.middleware';
-import { generalRateLimiter } from '@/middlewares/rate-limit.middleware';
-import logger from '@/utils/logger';
-import routes from '@/routes';
+import { env } from './config/env';
+import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
+import { generalRateLimiter } from './middlewares/rate-limit.middleware';
+import logger from './utils/logger';
+import routes from './routes';
 
 const app: Application = express();
 

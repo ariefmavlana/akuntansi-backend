@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { customerController } from '@/controllers/customer.controller';
-import { validate } from '@/middleware/validation.middleware';
-import { authenticate, authorize } from '@/middleware/auth.middleware';
+import { validate } from '@/middlewares/validation.middleware';
+import { authenticate, authorize } from '@/middlewares/auth.middleware';
 import {
     createCustomerSchema,
     updateCustomerSchema,

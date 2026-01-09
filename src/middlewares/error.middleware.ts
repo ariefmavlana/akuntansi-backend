@@ -64,6 +64,18 @@ export const errorHandler = (
     }
   }
 
+  // Handle AuthenticationError from auth service
+  if (err.name === 'AuthenticationError') {
+    ResponseUtil.unauthorized(res, err.message);
+    return;
+  }
+
+  // Handle ValidationError from auth service
+  if (err.name === 'ValidationError') {
+    ResponseUtil.badRequest(res, err.message);
+    return;
+  }
+
   // Handle custom AppError
   if (err instanceof AppError) {
     ResponseUtil.error(res, err.code, err.message, err.statusCode, err.details);
