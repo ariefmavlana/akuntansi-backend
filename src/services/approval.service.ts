@@ -197,6 +197,40 @@ export class ApprovalService {
             orderBy: { createdAt: 'desc' },
         });
     }
+
+    // Get approval summary statistics
+    async getSummary(userId: string) {
+        const user = await prisma.pengguna.findUnique({ where: { id: userId } });
+        if (!user) throw new AuthenticationError('User tidak ditemukan');
+
+        const [pending, approved, rejected] = await Promise.all([
+            prisma.approvalFlow.count({
+                where: {
+                    status: 'PENDING',
+                    approver: { perusahaanId: user.perusahaanId },
+                },
+            }),
+            prisma.approvalFlow.count({
+                where: {
+                    status: 'APPROVED',
+                    approver: { perusahaanId: user.perusahaanId },
+                },
+            }),
+            prisma.approvalFlow.count({
+                where: {
+                    status: 'REJECTED',
+                    approver: { perusahaanId: user.perusahaanId },
+                },
+            }),
+        ]);
+
+        return {
+            pending,
+            approved,
+            rejected,
+            total: pending + approved + rejected,
+        };
+    }
 }
 
 export const approvalService = new ApprovalService();

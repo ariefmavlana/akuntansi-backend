@@ -28,6 +28,11 @@ export class ApprovalController {
         const result = await approvalService.getApprovals(req.query as any, req.user!.userId);
         return successResponse(res, result, 'Approvals retrieved');
     }
+
+    async getSummary(req: AuthenticatedRequest, res: Response) {
+        const result = await approvalService.getSummary(req.user!.userId);
+        return successResponse(res, result, 'Approval summary retrieved');
+    }
 }
 
 export const approvalController = new ApprovalController();

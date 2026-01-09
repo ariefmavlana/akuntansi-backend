@@ -29,6 +29,10 @@ router.get('/pending', async (req, res) => {
     await approvalController.getPendingApprovals(req as any, res);
 });
 
+router.get('/summary', async (req, res) => {
+    await approvalController.getSummary(req as any, res);
+});
+
 router.get('/', validate(getApprovalsSchema), async (req, res) => {
     await approvalController.getApprovals(req as any, res);
 });
